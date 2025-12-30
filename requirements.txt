@@ -1,0 +1,3 @@
+sanic
+pydantic
+sanic-testing
