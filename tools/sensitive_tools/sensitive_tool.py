@@ -57,7 +57,7 @@ async def customize_ac_load(
 async def customize_vip_load_black_words_and_scan(ctx: SensitiveContext):
     customize_ac: SensitiveAutomatonLoader | None = None
 
-    if ctx.use_vip_black:
+    if ctx.use_vip_black and not CUSTOMIZE_RULE_VIP_BLACK_WORDS_DICT.get(ctx.app_id):
         customize_ac = await customize_ac_load(
             ctx.app_id,
             CUSTOMIZE_RULE_VIP_BLACK_WORDS_PATH,
@@ -194,11 +194,11 @@ class SensitiveTool:
         self.promise: Promise = Promise()
 
     def flow(self):
-        '''
+        """
         Docstring for flow
         超黑超白涉及敏感词的在此处加载。
         :param self: Description
-        '''
+        """
         self.promise.then(
             customize_vip_load_black_words_and_scan,
             customize_vip_load_white_words_and_scan,

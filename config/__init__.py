@@ -15,3 +15,5 @@ from .settings import (
     CUSTOMIZE_RULE_VIP_WHITE_RULE_DICT,
     CUSTOMIZE_RULE_VIP_WHITE_RULE_PATH,
 )
+
+from .vllm_settings import MODEL_CONFIGS
