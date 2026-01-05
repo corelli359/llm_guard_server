@@ -1,12 +1,10 @@
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import PydanticOutputParser
 from utils import LLMManager
-from models import VllmType
+from models import VllmType, SafetyRewriteResult
 
 
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.output_parsers import PydanticOutputParser
-from pydantic import BaseModel, Field
 
 from .intent_prompt_template import TC260_REWRITE_PROMPT
 
@@ -19,17 +17,6 @@ with open(api_key_path, "r") as f:
 
 if not API_KEY:
     raise Exception("NO_APIKEY_ERROR")
-
-
-class SafetyRewriteResult(BaseModel):
-    user_intent: str = Field(description="清洗后的用户核心意图")
-    rewritten_text: str = Field(
-        description="基于TC260无害化改写后的文本，若无法改写则为空"
-    )
-    is_safe_now: bool = Field(description="改写后是否安全可用")
-    hit_rule: str | None = Field(
-        description="触发的TC260规则编号，如 A.2.20，无触发则为 null"
-    )
 
 
 # ==========================================
@@ -64,7 +51,9 @@ class IntentService:
         # 预编译 Chain (Prompt | LLM | Parser)
         self.chain = self.prompt_template | self.llm | self.parser
 
-    async def execute(self, text: str, sensitive_words: list | None = None) -> dict:
+    async def execute(
+        self, text: str, sensitive_words: list | None = None
+    ) -> SafetyRewriteResult:
         """
         执行改写任务
         :param text: 用户原始输入
@@ -85,15 +74,15 @@ class IntentService:
                 }
             )
 
-            return result.model_dump()
+            return result
 
         except Exception as e:
             # 生产环境建议结合 logger 记录详细堆栈
-            print(f"⚠️ [IntentService] 改写失败: {e}")
+            print(f"[IntentService] 改写失败: {e}")
             # 降级策略：如果 LLM 挂了，为了安全起见，通常返回不安全，或者根据策略透传
-            return {
-                "user_intent": "Error",
-                "rewritten_text": "",
-                "is_safe_now": False,
-                "hit_rule": "SystemError",
-            }
+            return SafetyRewriteResult(
+                user_intent="Error",
+                rewritten_text="",
+                is_safe_now=False,
+                hit_rule="SystemError",
+            )

@@ -35,7 +35,7 @@ class LLMManager:
         print("LLMManager 核心服务已初始化")
 
     @classmethod
-    def get_instance(cls) :
+    def get_instance(cls):
         if not cls._instance:
             cls._instance = cls()
         return cls._instance
@@ -51,7 +51,7 @@ class LLMManager:
 
                     print(f"初始化模型接入: {model_type.value} ...")
                     llm = ChatOpenAI(
-                        model=config["model"],
+                        model=config["model_name"],
                         temperature=config["temperature"],
                         api_key=config["api_key"],
                         base_url=config["base_url"],

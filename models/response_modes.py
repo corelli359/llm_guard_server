@@ -10,3 +10,4 @@ class SafetyRewriteResult(BaseModel):
     hit_rule: str | None = Field(
         description="触发的TC260规则编号，如 A.2.20，无触发则为 null"
     )
+    rewrite_decision: int = 50

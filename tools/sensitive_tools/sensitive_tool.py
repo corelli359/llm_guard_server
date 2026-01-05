@@ -182,6 +182,7 @@ async def white_load_and_filter(ctx: SensitiveContext):
     for key in merged_keys:
         global_words = set(ctx.global_result.get(key, []))
         customize_words = set(ctx.customize_result.get(key, []))
+        global_words = global_words - customize_words  #  防止一个词在两个通用和自定义中都出现，如果出现则只保留自定义
         merged_words = global_words | customize_words
         final_words = merged_words - white_set
 
