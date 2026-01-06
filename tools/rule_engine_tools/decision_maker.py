@@ -8,8 +8,6 @@ from config import (
     CUSTOMIZE_RULE_VIP_BLACK_RULE_DICT,
     CUSTOMIZE_RULE_VIP_WHITE_RULE_DICT,
 )
-from sympy import N
-
 
 class DecisionClassifyEnum(IntEnum):
     PASS = 0
