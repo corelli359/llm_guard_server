@@ -1,4 +1,6 @@
 from typing import List
+
+from whatthepatch import apply_diff
 from sqlalchemy.future import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from models import (
@@ -28,6 +30,16 @@ class RuleDataLoaderDAO:
     async def get_all_scenario_keywords(self) -> List[ScenarioKeywords]:
         """全量加载：场景自定义敏感词"""
         stmt = select(ScenarioKeywords).where(ScenarioKeywords.is_active == True)
+        result = await self.session.execute(stmt)
+        return list(result.scalars().all())
+
+    async def get_scenario_keywords_by_appid(
+        self, app_id: str
+    ) -> List[ScenarioKeywords]:
+        """全量加载：场景自定义敏感词"""
+        stmt = select(ScenarioKeywords).where(
+            ScenarioKeywords.is_active == True, ScenarioKeywords.scenario_id == app_id
+        )
         result = await self.session.execute(stmt)
         return list(result.scalars().all())
 

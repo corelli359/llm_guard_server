@@ -16,7 +16,6 @@ class SensitiveAutomatonLoaderByDB:
         
         A = ahocorasick.Automaton()
         for idx, word in enumerate(word_list):
-            # payload = (word.keyword, word.tag_code)
             A.add_word(word.keyword, word.tag_code)
         A.make_automaton()
         self.automaton = A

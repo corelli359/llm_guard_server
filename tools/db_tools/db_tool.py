@@ -32,13 +32,18 @@ class DBConnectTool:
             except Exception as e:
                 raise e
 
-    async def load_data_from_db(self):
+    # async def load_data_from_db(self):
 
-        async with self.get_dao() as dao:
-            result = await dao.fetch_full_data_package()
-        return result
+    #     async with self.get_dao() as dao:
+    #         result = await dao.fetch_full_data_package()
+    #     return result
 
     async def load_global_words(self):
         async with self.get_dao() as dao:
             result = await dao.get_all_global_keywords()
+        return result
+
+    async def load_custom_words(self, app_id: str):
+        async with self.get_dao() as dao:
+            result = await dao.get_scenario_keywords_by_appid(app_id)
         return result
