@@ -6,6 +6,9 @@ from config import MODEL_CONFIGS
 from models import VllmType
 
 
+
+
+
 class LLMManager:
     _instance = None
     _lock = threading.Lock()  # 线程锁，防止多线程并发初始化时创建多个实例
