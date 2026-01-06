@@ -1,2 +1,2 @@
 from .sensitive_tool import SensitiveTool
-from .sensitve_maker import SensitiveAutomatonLoader
+from .sensitve_maker import SensitiveAutomatonLoader, SensitiveAutomatonLoaderByDB

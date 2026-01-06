@@ -28,6 +28,7 @@ class SensitiveData(BaseModel):
     vip_white_words_result: Dict[str, List] = Field(default_factory=dict)
     global_result: Dict[str, List] = Field(default_factory=dict)
     final_result: Dict[str, List] = Field(default_factory=dict)
+    original_input_prompt: str | None = None
 
 
 class GuardData(BaseModel):
@@ -39,6 +40,7 @@ class DecisionData(BaseModel):
     final_decision: Dict[str, Any] = Field(default_factory=dict)
     decision_dict: Dict[str, Any] = Field(default_factory=dict)
     all_decision_dict: Dict[str, Dict[str, Any]] = Field(default_factory=dict)
+    rewrite_result: Dict[str, Any] = Field(default_factory=dict)
 
 
 class SensitiveContext(SensitivePromiseInput, SensitiveData, GuardData, DecisionData):

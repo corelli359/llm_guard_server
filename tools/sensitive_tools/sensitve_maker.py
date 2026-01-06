@@ -2,8 +2,23 @@ import threading
 
 from config import SENSITIVE_DICT
 import ahocorasick
-
+from models import GlobalKeywords, ScenarioKeywords
 import random
+from typing import Union, List
+
+
+class SensitiveAutomatonLoaderByDB:
+    def __init__(self) -> None:
+        self.automaton = None
+        self.lock = threading.Lock()
+
+    def load_keywords(self, word_list: List[Union[GlobalKeywords, ScenarioKeywords]]):
+        
+        A = ahocorasick.Automaton()
+        for idx, word in enumerate(word_list):
+            A.add_word(word.keyword, word.tag_code)
+        A.make_automaton()
+        self.automaton = A
 
 
 class SensitiveAutomatonLoader:
@@ -12,6 +27,9 @@ class SensitiveAutomatonLoader:
         self.name = name
         self.path = path
         self.lock = threading.Lock()
+
+    def load_from_db(self, word_list):
+        pass
 
     def loader(self, word_list):
         A = ahocorasick.Automaton()
