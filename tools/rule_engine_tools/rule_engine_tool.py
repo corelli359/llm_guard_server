@@ -13,6 +13,7 @@ from config import (
 from ..intent_tools import IntentService
 from models import SafetyRewriteResult
 from ..string_filter_tools import remove_control_chars
+from ..data_tool.data_provider import DataProvider
 
 
 def load_rule(app_id: str, path: dict, mapping: dict, flush: bool = False):
@@ -37,6 +38,19 @@ async def customize_vip_white_rule_load(ctx: SensitiveContext):
             CUSTOMIZE_RULE_VIP_WHITE_RULE_PATH,
             CUSTOMIZE_RULE_VIP_WHITE_RULE_DICT,
         )
+
+
+async def custom_vip_load_by_db(ctx: SensitiveContext):
+    data_provider: DataProvider = DataProvider.get_instance()
+    custom_vip = data_provider.custom_vip.get(ctx.app_id)
+    if not custom_vip or not custom_vip.loaded:
+        await data_provider.build_ac("vip", ctx.app_id)
+
+
+# async def customize_vip_black_rule_load_by_db(ctx: SensitiveContext):
+#     if ctx.use_vip_black:
+#         data_provider: DataProvider = DataProvider.get_instance()
+#         await data_provider.build_ac("vip", ctx.app_id)
 
 
 async def customize_vip_black_rule_load(ctx: SensitiveContext):
@@ -96,8 +110,9 @@ class RuleEngineTool:
         sensitive_tool.flow()
         self.promise.then(
             remove_control_chars,
-            customize_vip_white_rule_load,
-            customize_vip_black_rule_load,
+            custom_vip_load_by_db,
+            # customize_vip_white_rule_load,
+            # customize_vip_black_rule_load,
         ).then(sensitive_tool.execute, guard_tool.execute).then(make_decision).then(
             do_action_by_decision
         )

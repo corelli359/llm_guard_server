@@ -6,12 +6,13 @@ from enum import StrEnum
 from pydantic import BaseModel, Field
 
 safe_threshold = 0.8
-MAX_MS:float = 0.13
+MAX_MS: float = 0.13
+
 
 class GuardSafetyEnum(StrEnum):
-    SAFE = "safe"
-    UNSAFE = "unsafe"
-    CONTROVERSIAL = "controversial"
+    SAFE = "safe".upper()
+    UNSAFE = "unsafe".upper()
+    CONTROVERSIAL = "controversial".upper()
 
 
 class GuardCategoryEnum(StrEnum):

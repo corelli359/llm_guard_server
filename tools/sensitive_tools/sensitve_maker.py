@@ -1,5 +1,4 @@
 import threading
-
 from config import SENSITIVE_DICT
 import ahocorasick
 from models import GlobalKeywords, ScenarioKeywords
@@ -13,12 +12,23 @@ class SensitiveAutomatonLoaderByDB:
         self.lock = threading.Lock()
 
     def load_keywords(self, word_list: List[Union[GlobalKeywords, ScenarioKeywords]]):
-        
+
         A = ahocorasick.Automaton()
         for idx, word in enumerate(word_list):
             A.add_word(word.keyword, word.tag_code)
         A.make_automaton()
         self.automaton = A
+
+    def scan(self, text) -> dict:
+        if not self.automaton:
+            raise Exception("NO_WORD_LIST_ERROR")
+        contains = {}
+        for _, (word, tag_code) in self.automaton.iter(text):
+            if tag_code not in contains:
+                contains[tag_code] = []
+            if len(word) > 1:
+                contains[tag_code].append(word)
+        return contains
 
 
 class SensitiveAutomatonLoader:

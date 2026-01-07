@@ -1,5 +1,4 @@
 import asyncio
-from pdb import run
 from typing import Dict, Optional, Set
 from .sensitve_maker import SensitiveAutomatonLoader
 from config import (
@@ -16,6 +15,8 @@ from config import (
 from utils import Promise, run_in_async, async_perf_count
 from models import SensitiveContext
 from sanic.log import logger
+
+from tools.data_tool import DataProvider
 
 
 _APP_LOCKS: Dict[str, asyncio.Lock] = {}
@@ -52,6 +53,28 @@ async def customize_ac_load(
 
     else:
         return ac["data"]
+
+
+async def customize_vip_black_load_and_scan_by_db(ctx: SensitiveContext):
+    data_provider: DataProvider = DataProvider.get_instance()
+    ctx.vip_black_words_result = {}
+    if ctx.use_vip_black:
+        await data_provider.build_ac("vip", ctx.app_id)
+        custom_vip = data_provider.custom_vip.get(ctx.app_id)
+        if custom_vip and custom_vip.black_ac:
+            result = await run_in_async(custom_vip.black_ac.scan, ctx.input_prompt)
+            ctx.vip_black_words_result = result
+
+
+async def customize_vip_white_load_and_scan_by_db(ctx: SensitiveContext):
+    data_provider: DataProvider = DataProvider.get_instance()
+    ctx.vip_white_words_result = {}
+    if ctx.use_vip_white:
+        await data_provider.build_ac("vip", ctx.app_id)
+        custom_vip = data_provider.custom_vip.get(ctx.app_id)
+        if custom_vip and custom_vip.white_ac:
+            result = await run_in_async(custom_vip.white_ac.scan, ctx.input_prompt)
+            ctx.vip_white_words_result = result
 
 
 async def customize_vip_load_black_words_and_scan(ctx: SensitiveContext):
@@ -136,13 +159,67 @@ async def customize_load_and_scan(ctx: SensitiveContext):
         ctx.customize_result = {}
 
 
-async def global_load_and_scan(ctx: SensitiveContext):
-    global_ac: SensitiveAutomatonLoader | None = SENSITIVE_DICT.get("global")
-    if global_ac:
-        result = await run_in_async(global_ac.scan, ctx.input_prompt)
+async def customize_load_and_scan_by_db(ctx: SensitiveContext):
+    data_provider: DataProvider = DataProvider.get_instance()
+
+    if ctx.use_customize_words:
+        if ctx.app_id not in data_provider.custom_ac:
+            await data_provider.build_ac("customize", ctx.app_id)
+    else:
+        ctx.customize_result = {}
+        return
+    ac_container = data_provider.custom_ac.get(ctx.app_id)
+    if ac_container and ac_container.black_ac:
+        result = await run_in_async(ac_container.black_ac.scan, ctx.input_prompt)
+        ctx.customize_result = result
+    else:
+        ctx.customize_result = {}
+
+
+async def global_load_and_scan_by_db(ctx: SensitiveContext):
+    data_provider: DataProvider = DataProvider.get_instance()
+    if data_provider.global_ac:
+        result = await run_in_async(data_provider.global_ac.scan, ctx.input_prompt)
         ctx.global_result = result
     else:
         ctx.global_result = {}
+
+
+# async def global_load_and_scan(ctx: SensitiveContext):
+#     global_ac: SensitiveAutomatonLoader | None = SENSITIVE_DICT.get("global")
+#     if global_ac:
+#         result = await run_in_async(global_ac.scan, ctx.input_prompt)
+#         ctx.global_result = result
+#     else:
+#         ctx.global_result = {}
+
+
+async def final_filter(ctx: SensitiveContext):
+    ctx.final_result = {}
+
+    merged_keys = ctx.global_result.keys() | ctx.customize_result.keys()
+    if not merged_keys:
+        return
+
+    data_provider: DataProvider = DataProvider.get_instance()
+    this_data = data_provider.custom_ac.get(ctx.app_id)
+
+    white_set: Set[str] = set()
+
+    if ctx.use_customize_white:
+        if this_data and this_data.white_ac:
+            white_set = this_data.white_ac
+    for key in merged_keys:
+        global_words = set(ctx.global_result.get(key, []))
+        customize_words = set(ctx.customize_result.get(key, []))
+        global_words = (
+            global_words - customize_words
+        )  #  防止一个词在两个通用和自定义中都出现，如果出现则只保留自定义
+        merged_words = global_words | customize_words
+        final_words = merged_words - white_set
+
+        if final_words:
+            ctx.final_result[key] = list(final_words)
 
 
 async def white_load_and_filter(ctx: SensitiveContext):
@@ -172,17 +249,21 @@ async def white_load_and_filter(ctx: SensitiveContext):
     if not merged_keys:
         return
 
+    data_provider: DataProvider = DataProvider.get_instance()
+    this_data = data_provider.custom_ac.get(ctx.app_id)
+
     white_set: Set[str] = set()
 
     if ctx.use_customize_white:
-        white_set = await white_load(
-            ctx.app_id, SENSITIVE_CUSTOMIZE_WHITE_PATH[ctx.app_id]
-        )
+        if this_data and this_data.white_ac:
+            white_set = this_data.white_ac
 
     for key in merged_keys:
         global_words = set(ctx.global_result.get(key, []))
         customize_words = set(ctx.customize_result.get(key, []))
-        global_words = global_words - customize_words  #  防止一个词在两个通用和自定义中都出现，如果出现则只保留自定义
+        global_words = (
+            global_words - customize_words
+        )  #  防止一个词在两个通用和自定义中都出现，如果出现则只保留自定义
         merged_words = global_words | customize_words
         final_words = merged_words - white_set
 
@@ -200,14 +281,20 @@ class SensitiveTool:
         超黑超白涉及敏感词的在此处加载。
         :param self: Description
         """
+        # self.promise.then(
+        # customize_vip_black_load_and_scan_by_db,
+        # customize_vip_load_black_words_and_scan,
+        # customize_vip_white_load_and_scan_by_db,
+        # customize_vip_load_white_words_and_scan,
+        # )
         self.promise.then(
-            customize_vip_load_black_words_and_scan,
-            customize_vip_load_white_words_and_scan,
+            customize_load_and_scan_by_db,
+            # customize_load_and_scan,
+            global_load_and_scan_by_db,
+            # global_load_and_scan,
         ).then(
-            customize_load_and_scan,
-            global_load_and_scan,
-        ).then(
-            white_load_and_filter
+            final_filter
+            # white_load_and_filter
         )
 
     @async_perf_count

@@ -2,24 +2,24 @@ from typing import Dict, Any
 import os
 
 SENSITIVE_DICT_PATH: str = (
-    # "/Users/weipeng/Desktop/PY_WORK_SPACE/LangTaste/agent_dev_gemini/security/guardrailsSever/assets/sensitive_words_lines.txt"
-    "/Users/corelli/Desktop/PROJECT_SPACE/llm_guard_server/assets/sensitive_words_lines.txt"
+    "/Users/weipeng/Desktop/PY_WORK_SPACE/LangTaste/agent_dev_gemini/security/guardrailsSever/assets/sensitive_words_lines.txt"
+    # "/Users/corelli/Desktop/PROJECT_SPACE/llm_guard_server/assets/sensitive_words_lines.txt"
 
 )
 # SENSITIVE_DICT_PATH:str = './assets/sensitive_words_lines.txt'
 SENSITIVE_DICT = {}
 SENSITIVE_CUSTOMIZE_DICT = {}
 SENSITIVE_CUSTOMIZE_PATH = {
-    # "999999": "/Users/weipeng/Desktop/PY_WORK_SPACE/LangTaste/agent_dev_gemini/security/guardrailsSever/assets/999999.txt"
-    "999999": "/Users/corelli/Desktop/PROJECT_SPACE/llm_guard_server/assets/999999.txt"
+    "999999": "/Users/weipeng/Desktop/PY_WORK_SPACE/LangTaste/agent_dev_gemini/security/guardrailsSever/assets/999999.txt"
+    # "999999": "/Users/corelli/Desktop/PROJECT_SPACE/llm_guard_server/assets/999999.txt"
 
 }
 
 
 SENSITIVE_WHITE_DICT = {}
 SENSITIVE_CUSTOMIZE_WHITE_PATH = {
-    # "999999": "/Users/weipeng/Desktop/PY_WORK_SPACE/LangTaste/agent_dev_gemini/security/guardrailsSever/assets/999999-w.txt"
-    "999999": "//Users/corelli/Desktop/PROJECT_SPACE/llm_guard_server/assets/999999-w.txt"
+    "999999": "/Users/weipeng/Desktop/PY_WORK_SPACE/LangTaste/agent_dev_gemini/security/guardrailsSever/assets/999999-w.txt"
+    # "999999": "//Users/corelli/Desktop/PROJECT_SPACE/llm_guard_server/assets/999999-w.txt"
 
 }
 

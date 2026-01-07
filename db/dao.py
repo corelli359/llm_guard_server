@@ -43,6 +43,14 @@ class RuleDataLoaderDAO:
         result = await self.session.execute(stmt)
         return list(result.scalars().all())
 
+    async def get_scenario_by_appid(self, app_id: str) -> List[RuleScenarioPolicy]:
+        stmt = select(RuleScenarioPolicy).where(
+            RuleScenarioPolicy.is_active == True,
+            RuleScenarioPolicy.scenario_id == app_id,
+        )
+        result = await self.session.execute(stmt)
+        return list(result.scalars().all())
+
     async def get_all_scenario_policies(self) -> List[RuleScenarioPolicy]:
         """全量加载：场景策略（超黑/超白/规则覆盖）"""
         stmt = select(RuleScenarioPolicy).where(RuleScenarioPolicy.is_active == True)

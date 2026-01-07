@@ -1,6 +1,6 @@
 from enum import IntEnum
-from typing import Any, Dict, final
-from models import SensitiveContext
+from typing import Any, Dict
+from models import SensitiveContext, DecisionClassifyEnum
 from sanic.log import logger
 import asyncio
 from config import (
@@ -8,12 +8,13 @@ from config import (
     CUSTOMIZE_RULE_VIP_BLACK_RULE_DICT,
     CUSTOMIZE_RULE_VIP_WHITE_RULE_DICT,
 )
+from ..data_tool.data_provider import DataProvider
 
-class DecisionClassifyEnum(IntEnum):
-    PASS = 0
-    REJECT = 100
-    REWRITE = 50
-    MANUAL = 1000
+# class DecisionClassifyEnum(IntEnum):
+#     PASS = 0
+#     REJECT = 100
+#     REWRITE = 50
+#     MANUAL = 1000
 
 
 class DecisionSource(IntEnum):
@@ -64,21 +65,26 @@ def rank_by_vip_rules(ctx: SensitiveContext, rule_dict: dict):
 
 
 async def rank_by_normal_rules(ctx: SensitiveContext):
+    data_provider: DataProvider = DataProvider.get_instance()
     final_decision: int = -1
     use_customize: bool = False
     customize_rule: dict = {}
     decision_dict: dict = {}
     decision_details: Dict[str, Dict[str, Any]] = {}
+    decision: DecisionClassifyEnum = DecisionClassifyEnum.PASS
     if ctx.use_customize_rule:
         customize_rule = await load_customize_rule(ctx.app_id)
         if customize_rule:
             use_customize = True
     for k, v in ctx.final_result.items():
         _label = f"{k}-{ctx.safety}"
-        if not RULE_DICT_MOCK.get(_label):
+        # if not RULE_DICT_MOCK.get(_label):
+        
+        if not data_provider.global_rules.get(_label):
             logger.error("KEY_NOT_IN_RULE_ERROR")
         else:
-            decision = RULE_DICT_MOCK[_label]
+            # decision = RULE_DICT_MOCK[_label]
+            decision = data_provider.global_rules[_label]
             if use_customize and _label in customize_rule:
                 decision = DecisionClassifyEnum(customize_rule.get(_label))
             if decision.value > final_decision:

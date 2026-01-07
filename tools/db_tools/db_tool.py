@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+from typing import List
 from db import RuleDataLoaderDAO, DBConnector
 from sanic import Sanic
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
@@ -32,11 +33,10 @@ class DBConnectTool:
             except Exception as e:
                 raise e
 
-    # async def load_data_from_db(self):
-
-    #     async with self.get_dao() as dao:
-    #         result = await dao.fetch_full_data_package()
-    #     return result
+    async def load_global_rules(self):
+        async with self.get_dao() as dao:
+            results = await dao.get_all_global_defaults()
+        return results
 
     async def load_global_words(self):
         async with self.get_dao() as dao:
@@ -46,4 +46,31 @@ class DBConnectTool:
     async def load_custom_words(self, app_id: str):
         async with self.get_dao() as dao:
             result = await dao.get_scenario_keywords_by_appid(app_id)
-        return result
+        black_list = []
+        white_list = []
+        for row in result:
+            if row.category == 1:
+                black_list.append(row)
+            else:
+                white_list.append(row)
+        return black_list, white_list
+
+    async def load_scenario_by_app_id(self, app_id: str):
+        async with self.get_dao() as dao:
+            result = await dao.get_scenario_by_appid(app_id)
+
+        vip_black_words = []
+        vip_white_words = []
+        vip_black_rules: List[str] = []
+        vip_white_rules = []
+
+        for row in result:
+            if row.match_type == "words" and row.strategy == "block":
+                vip_black_words.append(row.match_value)
+            elif row.match_type == "words" and row.strategy == "pass":
+                vip_white_words.append(row.match_value)
+            elif row.match_type == "rule" and row.strategy == "block":
+                vip_black_rules.append(row.match_value)
+            elif row.match_type == "rule" and row.strategy == "pass":
+                vip_white_rules.append(row.match_value)
+        return vip_black_words, vip_black_rules, vip_white_words, vip_white_rules

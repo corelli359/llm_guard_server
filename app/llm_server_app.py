@@ -40,19 +40,20 @@ def create_app() -> Sanic:
             logger.info("Loading data from DB...")
             # await app.ctx.db_tool.load_data_from_db()
             await data_provider.build_ac("global")
+            await data_provider.build_rule()
 
             logger.info("Data loaded successfully.")
         except Exception as e:
             logger.error(f"Failed to load data from DB: {e}")
 
     logger.info("begin to load global sensitive words")
-    try:
-        global_loader = SensitiveAutomatonLoader("global", SENSITIVE_DICT_PATH)
-        global_loader.reload()
-        SENSITIVE_DICT["global"] = global_loader
-        logger.info("finish to load global sensitive words")
-    except Exception as e:
-        logger.error(f"Failed to load global sensitive words: {e}")
+    # try:
+    #     global_loader = SensitiveAutomatonLoader("global", SENSITIVE_DICT_PATH)
+    #     global_loader.reload()
+    #     SENSITIVE_DICT["global"] = global_loader
+    #     logger.info("finish to load global sensitive words")
+    # except Exception as e:
+    #     logger.error(f"Failed to load global sensitive words: {e}")
 
     @app.main_process_start
     async def start(app, loop):
