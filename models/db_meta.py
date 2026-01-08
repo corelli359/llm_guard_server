@@ -128,7 +128,7 @@ class RuleScenarioPolicy(Base):
     scenario_id: Mapped[str] = mapped_column(String(64))
     match_type: Mapped[str] = mapped_column(String(16))  # KEYWORD / TAG
     match_value: Mapped[str] = mapped_column(String(255))
-
+    rule_mode: Mapped[int] = mapped_column(Integer, default=2)
     extra_condition: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
 
     strategy: Mapped[str] = mapped_column(String(32))  # BLOCK / PASS / REWRITE

@@ -6,20 +6,22 @@ from utils.logging_config import LOGGING_CONFIG
 from db import DBConnector
 from tools.db_tools import DBConnectTool
 from tools.sensitive_tools import SensitiveAutomatonLoader
-from config.settings import SENSITIVE_DICT_PATH, SENSITIVE_DICT
-from tools.data_tool import DataProvider
+# from config.settings import SENSITIVE_DICT_PATH, SENSITIVE_DICT
+from tools.data_tool import DataProvider, DataInitPromise
+from utils.error_handler import setup_exception_handlers
 
 
 def create_app() -> Sanic:
     app = Sanic("GuardrailsService", log_config=LOGGING_CONFIG)
+    setup_exception_handlers(app)
 
-    # Load Config
-    app.config.update(
-        HOST=Config.HOST,
-        PORT=Config.PORT,
-        DEBUG=Config.DEBUG,
-        AUTO_RELOAD=Config.AUTO_RELOAD,
-    )
+    # # Load Config
+    # app.config.update(
+    #     HOST=Config.HOST,
+    #     PORT=Config.PORT,
+    #     DEBUG=Config.DEBUG,
+    #     AUTO_RELOAD=Config.AUTO_RELOAD,
+    # )
 
     # Initialize DB and Tools
     db_client = DBConnector()
@@ -39,8 +41,9 @@ def create_app() -> Sanic:
         try:
             logger.info("Loading data from DB...")
             # await app.ctx.db_tool.load_data_from_db()
-            await data_provider.build_ac("global")
-            await data_provider.build_rule()
+            data_promise = DataInitPromise()
+            data_promise.flow()
+            await data_promise.run(data_provider)
 
             logger.info("Data loaded successfully.")
         except Exception as e:
@@ -57,7 +60,7 @@ def create_app() -> Sanic:
 
     @app.main_process_start
     async def start(app, loop):
-        logger.info(f"!!!!!!Server starting on {app.config.HOST}:{app.config.PORT}")
+        logger.info(f"!!!!!!Server starting ")
 
     @app.route("/health")
     async def health_check(request):

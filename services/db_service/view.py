@@ -15,13 +15,9 @@ class DBHandle(HTTPMethodView):
         self.db_tool = db_tool
 
     async def get(self, request: Request) -> HTTPResponse:
-        result: dict = {}
-        try:
-            start = time.perf_counter_ns()
+        start = time.perf_counter_ns()
 
-            result = await self.db_tool.load_data_from_db()
-            logger.info(f"【1】 {(time.perf_counter_ns() - start)/1e6} ms")
-            # logger.info(f"【2】 {(time.perf_counter_ns() - start)/1e6} ms")
-        except Exception as e:
-            logger.info(e)
+        result = await self.db_tool.load_data_from_db()
+        logger.info(f"【1】 {(time.perf_counter_ns() - start)/1e6} ms")
+        
         return json({"data_count": len(result['global_keywords'])}, 200)

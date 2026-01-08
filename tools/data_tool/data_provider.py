@@ -1,12 +1,15 @@
 from collections import defaultdict
-from typing import Dict, List
+from typing import Any, Dict, List
 from utils import SingleTon, run_in_async
 from tools.db_tools import DBConnectTool
 from .ac_tool import SensitiveAutomatonLoaderByDB
 import asyncio
-from .ac_tool import CustomAcContainer, CustomVipContainer
+from .ac_tool import CustomContainer, CustomVipContainer
 from models import DecisionClassifyEnum, RuleGlobalDefaults
 from sanic.log import logger
+import pandas as pd
+from utils import Promise
+from models import DECISION_MAPPING
 
 _APP_LOCKS: Dict[str, asyncio.Lock] = {}
 _GLOBAL_LOCK = asyncio.Lock()
@@ -20,20 +23,12 @@ async def get_lock_by_app_id(app_id: str) -> asyncio.Lock:
     return _APP_LOCKS[app_id]
 
 
-DECISION_MAPPING: dict = {
-    "BLOCK": DecisionClassifyEnum.REJECT,
-    "PASS": DecisionClassifyEnum.PASS,
-    "REWRITE": DecisionClassifyEnum.REWRITE,
-    "REVIEW": DecisionClassifyEnum.MANUAL,
-}
-
-
 class DataProvider(metaclass=SingleTon):
     def __init__(self, db_tool: DBConnectTool) -> None:
         self.db_tool = db_tool
         self._global_ac: SensitiveAutomatonLoaderByDB | None = None
 
-        self._custom_ac: Dict[str, CustomAcContainer] = {}
+        self._custom_ac: Dict[str, CustomContainer] = {}
 
         self._vip: Dict[str, CustomVipContainer] = {}
 
@@ -72,19 +67,17 @@ class DataProvider(metaclass=SingleTon):
     def global_ac(self, ac):
         self._global_ac = ac
 
+    async def init_all_data(self):
+        promise = Promise()
+
     async def build_rule(self):
         if not self.global_rules:
             try:
-                results: List[RuleGlobalDefaults] = (
+                results: Dict[str, DecisionClassifyEnum] = (
                     await self.db_tool.load_global_rules()
                 )
-                if results:
-                    self.global_rules = {
-                        f"{item.tag_code}-{item.extra_condition}": DECISION_MAPPING[
-                            item.strategy.strip()
-                        ]
-                        for item in results
-                    }
+                self.global_rules = results
+
             except Exception as e:
                 logger.error(f"{str(e)}")
 
@@ -99,19 +92,25 @@ class DataProvider(metaclass=SingleTon):
                 app_id_lock: asyncio.Lock = await get_lock_by_app_id(app_id)
                 async with app_id_lock:
                     if app_id and app_id not in self.custom_ac:
+                        custom_container = CustomContainer()
                         black_list, white_list = await self.db_tool.load_custom_words(
                             app_id
                         )
-                        ac_container = CustomAcContainer()
-
                         if black_list:
                             ac = SensitiveAutomatonLoaderByDB()
                             await run_in_async(ac.load_keywords, black_list)
-                            ac_container.black_ac = ac
+                            custom_container.black_ac = ac
                         if white_list:
-                            ac_container.white_ac = set([_.keyword for _ in white_list])
-                        ac_container.loaded = True
-                        self.custom_ac[app_id] = ac_container
+                            custom_container.white_ac = set(
+                                [_.keyword for _ in white_list]
+                            )
+
+                        custom_rule_list = await self.db_tool.load_custom_rule(app_id)
+                        if custom_rule_list:
+                            custom_container.custom_rule = custom_rule_list
+
+                        custom_container.loaded = True
+                        self.custom_ac[app_id] = custom_container
 
             case "vip":
                 app_id_lock: asyncio.Lock = await get_lock_by_app_id(app_id)
@@ -122,16 +121,16 @@ class DataProvider(metaclass=SingleTon):
                             vip_black_rules,
                             vip_white_words,
                             vip_white_rules,
-                        ) = await self.db_tool.load_scenario_by_app_id(app_id)
+                        ) = await self.db_tool.load_vip_scenario_by_app_id(app_id)
                         vip_container = CustomVipContainer()
                         if vip_black_words:
                             ac = SensitiveAutomatonLoaderByDB()
                             await run_in_async(ac.load_keywords, vip_black_words)
                             vip_container.black_ac = ac
                         if vip_black_rules:
-                            vip_container.black_rule = set(vip_black_rules)
+                            vip_container.black_rule = vip_black_rules
                         if vip_white_rules:
-                            vip_container.white_rule = set(vip_white_rules)
+                            vip_container.white_rule = vip_white_rules
                         if vip_white_words:
                             ac = SensitiveAutomatonLoaderByDB()
                             await run_in_async(ac.load_keywords, vip_black_words)
@@ -140,3 +139,139 @@ class DataProvider(metaclass=SingleTon):
                         self.custom_vip[app_id] = vip_container
             case _:
                 raise Exception("NO_MATCHED_AC_TYPE_ERROR")
+
+
+async def load_global_words(ctx: DataProvider):
+    data = await ctx.db_tool.load_global_words()
+    ctx.global_ac = SensitiveAutomatonLoaderByDB()
+    await run_in_async(ctx.global_ac.load_keywords, data)
+
+
+async def load_global_rules(ctx: DataProvider):
+    results: Dict[str, DecisionClassifyEnum] = await ctx.db_tool.load_global_rules()
+    ctx.global_rules = results
+
+
+async def load_custom_words(ctx: DataProvider):
+    result_words = await ctx.db_tool.load_all_custom_words()
+    result_rules = await ctx.db_tool.load_all_custom_rules()
+    df_words = pd.DataFrame(
+        result_words,
+        columns=["scenario_id", "keyword", "tag_code", "category", "risk_level"],
+    )
+
+    df_rules = pd.DataFrame(
+        result_rules,
+        columns=[
+            "scenario_id",
+            "rule",
+            "strategy",
+        ],
+    )
+
+    df_rules["strategy"] = df_rules["strategy"].str.upper().map(DECISION_MAPPING)
+
+    all_app_ids = set(df_words["scenario_id"].unique()) | set(
+        df_rules["scenario_id"].unique()
+    )
+    words_grouped = df_words.groupby("scenario_id")
+    rules_grouped = df_rules.groupby("scenario_id")
+    for app_id in all_app_ids:
+
+        if app_id not in ctx.custom_ac:
+            custom = CustomContainer()
+            ctx.custom_ac[app_id] = custom
+        if app_id in words_grouped.groups:
+            group = words_grouped.get_group(app_id)
+            _df = group[group["category"] == 0]
+            black_list = list(zip(_df["keyword"], _df["tag_code"]))
+            white_list = group[group["category"] == 1]["keyword"].tolist()
+
+            if black_list:
+                ac = SensitiveAutomatonLoaderByDB()
+                await run_in_async(ac.load_keywords, black_list)
+                ctx.custom_ac[app_id].black_ac = ac
+
+            if white_list:
+                ctx.custom_ac[app_id].white_ac = set(white_list)
+        if app_id in rules_grouped.groups:
+            group = rules_grouped.get_group(app_id)
+            rules_dict = dict(zip(group["rule_key"], group["strategy"]))
+            ctx.custom_ac[app_id].custom_rule = rules_dict
+        ctx.custom_ac[app_id].loaded = True
+
+
+async def load_custom_words_else(ctx: DataProvider):
+    vip_data = await ctx.db_tool.load_all_vip()
+
+    vip_df = pd.DataFrame(
+        vip_data,
+        columns=[
+            "scenario_id",
+            "match_value",
+            "extra_condition",
+            "strategy",
+            "match_type",
+        ],
+    )
+
+    vip_words_df = vip_df[vip_df["match_type"] == "KEYWORD"]
+    vip_words_df["strategy"] = (
+        vip_words_df["strategy"].str.upper().map(DECISION_MAPPING)
+    )
+
+    vip_tag_df = vip_df[vip_df["match_type"] == "TAG"]
+    vip_tag_df["rule_key"] = (
+        vip_tag_df["match_value"].astype(str) + "-" + vip_tag_df["extra_condition"]
+    )
+
+    all_app_ids = set(vip_df["scenario_id"].unique())
+
+    words_grouped = vip_words_df.groupby("scenario_id")
+    rules_grouped = vip_tag_df.groupby("scenario_id")
+
+    for app_id in all_app_ids:
+        if app_id not in ctx.custom_vip:
+            custom_vip = CustomVipContainer()
+            ctx.custom_vip[app_id] = custom_vip
+        if app_id in rules_grouped:
+            group = rules_grouped.get_group(app_id)
+            if not group.empty:
+                _df = group[group["strategy"] == DecisionClassifyEnum.REJECT]
+                if not _df.empty:
+                    rules_dict = dict(zip(_df["rule_key"], _df["strategy"]))
+                    ctx.custom_vip[app_id].black_rule = rules_dict
+                _df = group[group["strategy"] == DecisionClassifyEnum.PASS]
+                if not _df.empty:
+                    rules_dict = dict(zip(_df["rule_key"], _df["strategy"]))
+                    ctx.custom_vip[app_id].white_rule = rules_dict
+        if app_id in words_grouped:
+            group = words_grouped.get_group(app_id)
+            if not group.empty:
+                _df = group[group["strategy"] == DecisionClassifyEnum.PASS]
+                if not _df.empty:
+                    white_list = list(zip(_df["match_value"], _df["extra_condition"]))
+                    if white_list:
+                        ac = SensitiveAutomatonLoaderByDB()
+                        await run_in_async(ac.load_keywords, white_list)
+                        ctx.custom_vip[app_id].white_ac = ac
+                _df = group[group["strategy"] != DecisionClassifyEnum.PASS]
+                if not _df.empty:
+                    black_list = list(zip(_df["match_value"], _df["extra_condition"]))
+                    if black_list:
+                        ac = SensitiveAutomatonLoaderByDB()
+                        await run_in_async(ac.load_keywords, black_list)
+                        ctx.custom_vip[app_id].black_ac = ac
+
+        ctx.custom_vip[app_id].loaded = True
+
+
+class DataInitPromise(Promise):
+
+    def flow(self):
+        self.then(load_global_rules, load_global_words).then(
+            load_custom_words, load_custom_words_else
+        )
+
+    async def run(self, ctx: DataProvider):
+        await self.execute(ctx)

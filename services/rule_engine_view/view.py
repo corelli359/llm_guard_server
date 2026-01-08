@@ -13,18 +13,14 @@ import time
 class RuleEngineInputHandler(HTTPMethodView):
     @validate(json=SensitiveContext)
     async def post(self, request: Request, body: SensitiveContext) -> HTTPResponse:
-        try:
-            # if body.use_vip_white and body.use_vip_black:
-            #     raise Exception("VIP_WHITE_AND_WORDS_ALL_TRUE_ERROR")
-            start = time.perf_counter_ns()
-            tool = RuleEngineTool()
-            tool.flow()
-            await tool.execute(body)
-            logger.info(f"【final】 {(time.perf_counter_ns() - start)/1e6} ms")
-            # logger.info(f"【2】 {(time.perf_counter_ns() - start)/1e6} ms")
-        except Exception as e:
-            logger.info(e)
-            return json({"data": str(e)}, 400)
+        # if body.use_vip_white and body.use_vip_black:
+        #     raise Exception("VIP_WHITE_AND_WORDS_ALL_TRUE_ERROR")
+        start = time.perf_counter_ns()
+        tool = RuleEngineTool()
+        tool.flow()
+        await tool.execute(body)
+        logger.info(f"【final】 {(time.perf_counter_ns() - start)/1e6} ms")
+        
         return json(
             {
                 # "senstive": body.final_result,

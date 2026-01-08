@@ -14,3 +14,11 @@ class DecisionClassifyEnum(IntEnum):
     REJECT = 100
     REWRITE = 50
     MANUAL = 1000
+
+
+DECISION_MAPPING: dict = {
+    "BLOCK": DecisionClassifyEnum.REJECT,
+    "PASS": DecisionClassifyEnum.PASS,
+    "REWRITE": DecisionClassifyEnum.REWRITE,
+    "REVIEW": DecisionClassifyEnum.MANUAL,
+}

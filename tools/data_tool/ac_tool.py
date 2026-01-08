@@ -1,3 +1,4 @@
+from typing import Dict
 import threading
 import ahocorasick
 from models import GlobalKeywords, ScenarioKeywords
@@ -39,14 +40,18 @@ class LoadBase:
 
 
 @dataclass
-class CustomAcContainer(LoadBase):
+class CustomContainer(LoadBase):
     black_ac: Optional[SensitiveAutomatonLoaderByDB] = None
     white_ac: Optional[Set[str]] = None
+    custom_rule: Dict[str, str] | None = None
 
 
 @dataclass
 class CustomVipContainer(LoadBase):
     black_ac: SensitiveAutomatonLoaderByDB | None = None
-    black_rule: Set[str] | None = None
-    white_rule: Set[str] | None = None
+    black_rule: Dict[str, Any] | None = None
+    white_rule: Dict[str, Any] | None = None
     white_ac: SensitiveAutomatonLoaderByDB | None = None
+
+
+

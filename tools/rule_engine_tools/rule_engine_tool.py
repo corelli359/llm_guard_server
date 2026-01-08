@@ -4,12 +4,12 @@ from models import SensitiveContext
 from ..guard_tools import GuardTool
 from ..sensitive_tools import SensitiveTool
 from .decision_maker import make_decision
-from config import (
-    CUSTOMIZE_RULE_VIP_BLACK_RULE_PATH,
-    CUSTOMIZE_RULE_VIP_BLACK_RULE_DICT,
-    CUSTOMIZE_RULE_VIP_WHITE_RULE_PATH,
-    CUSTOMIZE_RULE_VIP_WHITE_RULE_DICT,
-)
+# from config import (
+#     CUSTOMIZE_RULE_VIP_BLACK_RULE_PATH,
+#     CUSTOMIZE_RULE_VIP_BLACK_RULE_DICT,
+#     CUSTOMIZE_RULE_VIP_WHITE_RULE_PATH,
+#     CUSTOMIZE_RULE_VIP_WHITE_RULE_DICT,
+# )
 from ..intent_tools import IntentService
 from models import SafetyRewriteResult
 from ..string_filter_tools import remove_control_chars
@@ -30,14 +30,14 @@ def load_rule(app_id: str, path: dict, mapping: dict, flush: bool = False):
         mapping[app_id] = {"loaded": True, "data": rule_list}
 
 
-async def customize_vip_white_rule_load(ctx: SensitiveContext):
-    if ctx.use_vip_white and CUSTOMIZE_RULE_VIP_WHITE_RULE_DICT.get(ctx.app_id):
-        await run_in_async(
-            load_rule,
-            ctx.app_id,
-            CUSTOMIZE_RULE_VIP_WHITE_RULE_PATH,
-            CUSTOMIZE_RULE_VIP_WHITE_RULE_DICT,
-        )
+# async def customize_vip_white_rule_load(ctx: SensitiveContext):
+#     if ctx.use_vip_white and CUSTOMIZE_RULE_VIP_WHITE_RULE_DICT.get(ctx.app_id):
+#         await run_in_async(
+#             load_rule,
+#             ctx.app_id,
+#             CUSTOMIZE_RULE_VIP_WHITE_RULE_PATH,
+#             CUSTOMIZE_RULE_VIP_WHITE_RULE_DICT,
+#         )
 
 
 async def custom_vip_load_by_db(ctx: SensitiveContext):
@@ -53,14 +53,14 @@ async def custom_vip_load_by_db(ctx: SensitiveContext):
 #         await data_provider.build_ac("vip", ctx.app_id)
 
 
-async def customize_vip_black_rule_load(ctx: SensitiveContext):
-    if ctx.use_vip_black and CUSTOMIZE_RULE_VIP_BLACK_RULE_DICT.get(ctx.app_id):
-        await run_in_async(
-            load_rule,
-            ctx.app_id,
-            CUSTOMIZE_RULE_VIP_BLACK_RULE_PATH,
-            CUSTOMIZE_RULE_VIP_BLACK_RULE_DICT,
-        )
+# async def customize_vip_black_rule_load(ctx: SensitiveContext):
+#     if ctx.use_vip_black and CUSTOMIZE_RULE_VIP_BLACK_RULE_DICT.get(ctx.app_id):
+#         await run_in_async(
+#             load_rule,
+#             ctx.app_id,
+#             CUSTOMIZE_RULE_VIP_BLACK_RULE_PATH,
+#             CUSTOMIZE_RULE_VIP_BLACK_RULE_DICT,
+#         )
 
 
 async def rewrite_chat(ctx: SensitiveContext):

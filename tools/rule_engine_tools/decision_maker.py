@@ -2,19 +2,7 @@ from enum import IntEnum
 from typing import Any, Dict
 from models import SensitiveContext, DecisionClassifyEnum
 from sanic.log import logger
-import asyncio
-from config import (
-    RULE_CUSTOMIZE_DICT,
-    CUSTOMIZE_RULE_VIP_BLACK_RULE_DICT,
-    CUSTOMIZE_RULE_VIP_WHITE_RULE_DICT,
-)
 from ..data_tool.data_provider import DataProvider
-
-# class DecisionClassifyEnum(IntEnum):
-#     PASS = 0
-#     REJECT = 100
-#     REWRITE = 50
-#     MANUAL = 1000
 
 
 class DecisionSource(IntEnum):
@@ -23,28 +11,6 @@ class DecisionSource(IntEnum):
     VIP_BLACK_RULE = 800
     VIP_WHITE_WORDS = 900
     VIP_BLACK_WORDS = 1000
-
-
-RULE_DICT_MOCK = {
-    "A-1-safe": DecisionClassifyEnum.PASS,
-    "A-1-unsafe": DecisionClassifyEnum.REJECT,
-    "A-1-controversial": DecisionClassifyEnum.REJECT,
-    "B-1-safe": DecisionClassifyEnum.PASS,
-    "B-1-unsafe": DecisionClassifyEnum.REJECT,
-    "B-1-controversial": DecisionClassifyEnum.REWRITE,
-}
-
-
-async def load_customize_rule(app_id: str, reload: bool = False):
-    await asyncio.sleep(0.001)
-    if not RULE_CUSTOMIZE_DICT.get(app_id) or reload:
-        from config.settings import CUSTOMIZE_RULE_DICT_SAMPLE
-
-        RULE_CUSTOMIZE_DICT[app_id] = {
-            "data": CUSTOMIZE_RULE_DICT_SAMPLE.get(app_id),
-            "loaded": True,
-        }
-    return RULE_CUSTOMIZE_DICT[app_id].get("data", {})
 
 
 def rank_by_words(action: DecisionClassifyEnum):
@@ -72,16 +38,19 @@ async def rank_by_normal_rules(ctx: SensitiveContext):
     decision_dict: dict = {}
     decision_details: Dict[str, Dict[str, Any]] = {}
     decision: DecisionClassifyEnum = DecisionClassifyEnum.PASS
-    if ctx.use_customize_rule:
-        customize_rule = await load_customize_rule(ctx.app_id)
+    custom = data_provider.custom_ac[ctx.app_id]
+    if ctx.use_customize_rule and custom:
+        if data_provider.custom_ac[ctx.app_id]:
+            if custom.custom_rule:
+                customize_rule = custom.custom_rule
         if customize_rule:
             use_customize = True
     for k, v in ctx.final_result.items():
         _label = f"{k}-{ctx.safety}"
-        # if not RULE_DICT_MOCK.get(_label):
-        
+
         if not data_provider.global_rules.get(_label):
-            logger.error("KEY_NOT_IN_RULE_ERROR")
+            logger.error(f"KEY_NOT_IN_RULE_ERROR -- {_label}")
+            raise Exception("KEY_NOT_IN_RULE_ERROR")
         else:
             # decision = RULE_DICT_MOCK[_label]
             decision = data_provider.global_rules[_label]
@@ -100,6 +69,10 @@ async def make_decision(ctx: SensitiveContext):
 
     decision_details: Dict[str, Dict[str, Any]] = {}
     decision_dict = {}
+
+    data_provider: DataProvider = DataProvider.get_instance()
+    custom = data_provider.custom_ac.get(ctx.app_id)
+    custom_vip = data_provider.custom_vip.get(ctx.app_id)
 
     def decision_jugde(_decision, priority):
         nonlocal final_decision_dict
@@ -129,19 +102,17 @@ async def make_decision(ctx: SensitiveContext):
         decision_details[str(value)] = _details
         decision_dict = _data
 
-    if ctx.use_vip_black and CUSTOMIZE_RULE_VIP_BLACK_RULE_DICT.get(ctx.app_id, {}):
+    # if ctx.use_vip_black and CUSTOMIZE_RULE_VIP_BLACK_RULE_DICT.get(ctx.app_id, {}):
+    if ctx.use_vip_black and custom_vip and custom_vip.black_rule:
         value = DecisionSource.VIP_BLACK_RULE.value
-        _final_decision, _details = rank_by_vip_rules(
-            ctx, CUSTOMIZE_RULE_VIP_BLACK_RULE_DICT[ctx.app_id]
-        )
+        _final_decision, _details = rank_by_vip_rules(ctx, custom_vip.black_rule)
         decision_jugde(_final_decision, value)
         decision_details[str(value)] = _details
 
-    if ctx.use_vip_white and CUSTOMIZE_RULE_VIP_WHITE_RULE_DICT.get(ctx.app_id, {}):
+    # if ctx.use_vip_white and CUSTOMIZE_RULE_VIP_WHITE_RULE_DICT.get(ctx.app_id, {}):
+    if ctx.use_vip_white and custom_vip and custom_vip.white_rule:
         value = DecisionSource.VIP_WHITE_RULE.value
-        _final_decision, _details = rank_by_vip_rules(
-            ctx, CUSTOMIZE_RULE_VIP_WHITE_RULE_DICT[ctx.app_id]
-        )
+        _final_decision, _details = rank_by_vip_rules(ctx, custom_vip.white_rule)
         decision_jugde(_final_decision, value)
         decision_details[str(value)] = _details
 
