@@ -42,14 +42,12 @@ import os
 
 
 # CUSTOMIZE_RULE_DICT_SAMPLE = {"999999": {"A-1-controversial": 0}}
-DATABASE_URL = (
-    "mysql+aiomysql://root:123456abc@localhost:3306/llm_safe_db?charset=utf8mb4"
-)
+
 
 
 class Config:
     HOST = os.getenv("HOST", "127.0.0.1")
     PORT = int(os.getenv("PORT", 8000))
     DEBUG = False
-    AUTO_RELOAD = False
-    WORKER = 4
+    AUTO_RELOAD = True
+    WORKER = 1

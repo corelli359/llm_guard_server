@@ -22,11 +22,14 @@ class RuleDataLoaderDAO:
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def get_all_global_keywords(self) -> List[GlobalKeywords]:
+    async def get_all_global_keywords(self) -> Sequence[Row]:
         """全量加载：通用敏感词"""
-        stmt = select(GlobalKeywords).where(GlobalKeywords.is_active == True)
+        stmt = select(
+            GlobalKeywords.keyword,
+            GlobalKeywords.tag_code
+            ).where(GlobalKeywords.is_active == True)
         result = await self.session.execute(stmt)
-        return list(result.scalars().all())
+        return result.all()
 
     async def get_all_scenario_keywords(self) -> Sequence[Row]:
         """全量加载：场景自定义敏感词"""

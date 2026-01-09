@@ -143,6 +143,7 @@ class DataProvider(metaclass=SingleTon):
 
 async def load_global_words(ctx: DataProvider):
     data = await ctx.db_tool.load_global_words()
+    print(type(data))
     ctx.global_ac = SensitiveAutomatonLoaderByDB()
     await run_in_async(ctx.global_ac.load_keywords, data)
 
