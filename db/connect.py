@@ -8,7 +8,6 @@ from sqlalchemy.orm import sessionmaker
 from config import DATABASE_URL
 from sqlalchemy import select
 from sanic.log import logger
-from sympy import N
 
 
 class DBConnector:

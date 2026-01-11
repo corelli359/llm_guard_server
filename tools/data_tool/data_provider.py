@@ -6,10 +6,10 @@ from .ac_tool import SensitiveAutomatonLoaderByDB
 import asyncio
 from .ac_tool import CustomContainer, CustomVipContainer
 from models import DecisionClassifyEnum, RuleGlobalDefaults
-from sanic.log import logger
 import pandas as pd
+from sanic.log import logger
 from utils import Promise
-from models import DECISION_MAPPING
+from models import DECISION_MAPPING, ScenarioKeywords
 
 _APP_LOCKS: Dict[str, asyncio.Lock] = {}
 _GLOBAL_LOCK = asyncio.Lock()
@@ -143,14 +143,15 @@ class DataProvider(metaclass=SingleTon):
 
 async def load_global_words(ctx: DataProvider):
     data = await ctx.db_tool.load_global_words()
-    print(type(data))
     ctx.global_ac = SensitiveAutomatonLoaderByDB()
     await run_in_async(ctx.global_ac.load_keywords, data)
+    logger.info("global sensitive words loaded success!")
 
 
 async def load_global_rules(ctx: DataProvider):
     results: Dict[str, DecisionClassifyEnum] = await ctx.db_tool.load_global_rules()
     ctx.global_rules = results
+    
 
 
 async def load_custom_words(ctx: DataProvider):
@@ -172,6 +173,9 @@ async def load_custom_words(ctx: DataProvider):
 
     df_rules["strategy"] = df_rules["strategy"].str.upper().map(DECISION_MAPPING)
 
+    # Filter out empty tag_code
+    df_words = df_words[df_words["tag_code"].fillna("").str.strip() != ""]
+
     all_app_ids = set(df_words["scenario_id"].unique()) | set(
         df_rules["scenario_id"].unique()
     )
@@ -184,9 +188,13 @@ async def load_custom_words(ctx: DataProvider):
             ctx.custom_ac[app_id] = custom
         if app_id in words_grouped.groups:
             group = words_grouped.get_group(app_id)
-            _df = group[group["category"] == 0]
-            black_list = list(zip(_df["keyword"], _df["tag_code"]))
-            white_list = group[group["category"] == 1]["keyword"].tolist()
+            _df = group[group["category"] == 1]
+            # Reconstruct ScenarioKeywords objects
+            black_list = [
+                ScenarioKeywords(keyword=row.keyword, tag_code=row.tag_code)
+                for row in _df.itertuples(index=False)
+            ]
+            white_list = group[group["category"] == 0]["keyword"].tolist()
 
             if black_list:
                 ac = SensitiveAutomatonLoaderByDB()
@@ -200,6 +208,8 @@ async def load_custom_words(ctx: DataProvider):
             rules_dict = dict(zip(group["rule_key"], group["strategy"]))
             ctx.custom_ac[app_id].custom_rule = rules_dict
         ctx.custom_ac[app_id].loaded = True
+    logger.info("customs sensitive words loaded success!")
+
 
 
 async def load_custom_words_else(ctx: DataProvider):

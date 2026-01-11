@@ -49,12 +49,6 @@ class SensitiveAutomatonLoader:
         A.make_automaton()
         self.automaton = A
 
-    # def reload(self, flush: bool = False):
-    #     if flush or self.name not in SENSITIVE_DICT:
-    #         with open(self.path, "r") as f:
-    #             word_list = f.readlines()
-    #         word_list = [_.strip() for _ in word_list]
-    #         self.loader(word_list)
 
     def scan(self, text) -> dict:
         if not self.automaton:

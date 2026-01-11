@@ -1,6 +1,5 @@
 from typing import Any, List, Sequence
 from sqlalchemy.engine import Row
-from whatthepatch import apply_diff
 from sqlalchemy.future import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from models import (

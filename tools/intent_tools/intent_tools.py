@@ -7,13 +7,13 @@ from models import VllmType, SafetyRewriteResult
 from langchain_core.prompts import ChatPromptTemplate
 
 from .intent_prompt_template import TC260_REWRITE_PROMPT
+from config import DEEP_SEEK_API_KEY
 
+API_KEY: str | None = DEEP_SEEK_API_KEY
 
-API_KEY: str | None = None
-
-api_key_path = "/Users/weipeng/Desktop/PY_WORK_SPACE/LangTaste/agent_dev_gemini/security/data/deepseek_apikey.txt"
-with open(api_key_path, "r") as f:
-    API_KEY = f.read().strip()
+# api_key_path = "/Users/weipeng/Desktop/PY_WORK_SPACE/LangTaste/agent_dev_gemini/security/data/deepseek_apikey.txt"
+# with open(api_key_path, "r") as f:
+#     API_KEY = f.read().strip()
 
 if not API_KEY:
     raise Exception("NO_APIKEY_ERROR")
