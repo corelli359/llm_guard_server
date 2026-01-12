@@ -1,5 +1,3 @@
-from codecs import lookup
-from turtle import st
 from sanic import HTTPResponse, json
 from sanic.views import HTTPMethodView
 from tools.rule_engine_tools import RuleEngineTool
