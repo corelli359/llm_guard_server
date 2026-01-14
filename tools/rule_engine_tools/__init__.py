@@ -1,1 +1,1 @@
-from .rule_engine_tool import RuleEngineTool
+from .rule_engine_tool import InputRuleEngineTool

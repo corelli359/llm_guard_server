@@ -45,15 +45,20 @@ async def rewrite_chat(ctx: SensitiveContext):
 async def do_action_by_decision(ctx: SensitiveContext):
     score: int = ctx.final_decision.get("score", -1)
     match score:
-        case 0 | 100 | 1000:
+        case 0 | 100:
+            pass
+        case 1000:
             pass
         case 50:
-            await rewrite_chat(ctx)
+            if not ctx.is_output:
+                await rewrite_chat(ctx)
+            else:
+                pass
         case _:
             raise Exception("NO_DECISION_FOUND_ERROR")
 
 
-class RuleEngineTool:
+class InputRuleEngineTool:
     def __init__(self) -> None:
         self.promise = Promise()
 
@@ -65,12 +70,28 @@ class RuleEngineTool:
         self.promise.then(
             remove_control_chars,
             custom_vip_load_by_db,
-            # customize_vip_white_rule_load,
-            # customize_vip_black_rule_load,
-        ).then(sensitive_tool.execute, guard_tool.execute).then(make_decision).then(
-            do_action_by_decision
-        )
+        ).then(
+            sensitive_tool.execute, guard_tool.execute
+        ).then(make_decision).then(do_action_by_decision)
 
     @async_perf_count
     async def execute(self, ctx: SensitiveContext):
         await self.promise.execute(ctx)
+
+
+class OutputRuleEngineTool:
+    def __init__(self) -> None:
+        self.promise = Promise()
+
+    def flow(self):
+        guard_tool = GuardTool()
+        sensitive_tool = SensitiveTool()
+        guard_tool.flow()
+        sensitive_tool.flow()
+        self.promise.then(remove_control_chars).then(
+            sensitive_tool.execute, guard_tool.execute
+        )
+
+    @async_perf_count
+    async def execute(self, ctx: SensitiveContext):
+        pass

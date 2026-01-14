@@ -1,5 +1,6 @@
 from enum import IntEnum
 from typing import Any, Dict
+from mock_api.mock_llm import GuardSafetyEnum
 from models import SensitiveContext, DecisionClassifyEnum
 from sanic.log import logger
 from ..data_tool.data_provider import DataProvider
@@ -71,7 +72,7 @@ async def make_decision(ctx: SensitiveContext):
     decision_dict = {}
 
     data_provider: DataProvider = DataProvider.get_instance()
-    custom = data_provider.custom_ac.get(ctx.app_id)
+    # custom = data_provider.custom_ac.get(ctx.app_id)
     custom_vip = data_provider.custom_vip.get(ctx.app_id)
 
     def decision_jugde(_decision, priority):

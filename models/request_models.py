@@ -7,6 +7,7 @@ class SensitivePromiseInput(BaseModel):
     app_id: str = Field(..., min_length=3, max_length=20)
     apikey: str = Field(..., description="密钥")
     input_prompt: str = Field(..., min_length=1, description="用户输入")
+    is_output: bool = False
     use_customize_white: bool = False
     use_customize_words: bool = False
     use_customize_rule: bool = False
@@ -22,7 +23,7 @@ class SensitivePromiseInput(BaseModel):
 
 
 class SensitiveData(BaseModel):
-    result: Dict[str, Any] = Field(default_factory=dict)
+    # result: Dict[str, Any] = Field(default_factory=dict)
     customize_result: Dict[str, List] = Field(default_factory=dict)
     vip_black_words_result: Dict[str, List] = Field(default_factory=dict)
     vip_white_words_result: Dict[str, List] = Field(default_factory=dict)
