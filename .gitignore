@@ -5,3 +5,4 @@ config/db_config.py
 config/apikey_settings.py
 .DS_Store
 .vscode/
+/*.md

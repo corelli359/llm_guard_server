@@ -23,7 +23,7 @@ if not API_KEY:
 # 2. 意图识别与改写服务
 # ==========================================
 class IntentService:
-    def __init__(self, vllm_type: VllmType = VllmType.SAFE_MODEL):
+    def __init__(self):
         """
         初始化服务：
         1. 获取 LLM 实例（从单例管理器）
@@ -31,11 +31,7 @@ class IntentService:
         3. 配置 Pydantic 解析器
         """
         # 从单例池获取 DeepSeek (响应速度快，适合意图识别)
-        if not vllm_type:
-            self.vllm_type = VllmType.SAFE_MODEL
-        else:
-            self.vllm_type = vllm_type
-        self.llm = LLMManager.get_instance().get_model(self.vllm_type)
+        self.llm = LLMManager.get_instance().get_model(VllmType.SAFE_MODEL)
 
         self.parser = PydanticOutputParser(pydantic_object=SafetyRewriteResult)
 
