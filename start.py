@@ -10,5 +10,5 @@ if __name__ == "__main__":
         port=Config.PORT,
         debug=Config.DEBUG,
         auto_reload=Config.AUTO_RELOAD,
-        workers=1
+        # workers=1
     )

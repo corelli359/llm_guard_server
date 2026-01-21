@@ -21,7 +21,7 @@ class LLMManager:
         if hasattr(self, "_initialized") and self._initialized:
             return
 
-        limits = httpx.Limits(max_keepalive_connections=20, max_connections=100)
+        limits = httpx.Limits(max_keepalive_connections=20, max_connections=150)
 
         self.shared_client = httpx.AsyncClient(
             limits=limits,

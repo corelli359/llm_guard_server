@@ -1,12 +1,11 @@
 import time
 import json
+import uuid
 from sanic import Sanic, Request, response
 from sanic.log import logger
+import logging
 
 # 获取名为 'audit' 的特定 logger，该 logger 在 logging_config 中配置为只写文件
-audit_logger = logger.getChild("audit") # 实际上 sanic.log.logger 是 root 下的，我们需要获取独立的
-
-import logging
 audit_logger = logging.getLogger("audit")
 
 
@@ -15,6 +14,11 @@ def setup_audit_middleware(app: Sanic):
     @app.on_request
     async def on_request(request: Request):
         request.ctx.start_time = time.time()
+        # Ensure a request_id is set for every request
+        request_id = request.headers.get("X-Request-ID") or request.headers.get("X-Correlation-ID")
+        if not request_id:
+            request_id = str(uuid.uuid4())
+        request.ctx.request_id = request_id
 
     @app.on_response
     async def on_response(request: Request, response: response.BaseHTTPResponse):
@@ -38,6 +42,21 @@ def setup_audit_middleware(app: Sanic):
                  except:
                      res_body = response.body.decode('utf-8')[:1000] # 截断防止过长
 
+            # 提取 request.ctx 内容
+            ctx_data = {}
+            if hasattr(request, "ctx"):
+                for key, value in vars(request.ctx).items():
+                    # 排除内部使用的 start_time
+                    if key == "start_time":
+                        continue
+                    try:
+                        # 检查是否可序列化
+                        json.dumps(value)
+                        ctx_data[key] = value
+                    except (TypeError, OverflowError):
+                        # 不可序列化则转为字符串
+                        ctx_data[key] = str(value)
+
             log_entry = {
                 "timestamp": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
                 "level": "INFO",
@@ -47,9 +66,10 @@ def setup_audit_middleware(app: Sanic):
                 "status": response.status,
                 "latency_ms": round(latency, 2),
                 "client_ip": request.remote_addr or request.ip,
+                "request_id": request.ctx.request_id,
                 "request": req_body,
                 "response": res_body,
-                # "request_id": request.headers.get("X-Request-ID") # 如果有 gateway 传透
+                "context": ctx_data,
             }
             
             # 使用 json.dumps 确保只有一行，方便 filebeat 采集

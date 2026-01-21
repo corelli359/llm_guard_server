@@ -3,6 +3,7 @@ import logging
 import logging.handlers
 import os
 from pathlib import Path
+from queue import Queue
 
 # Ensure logs directory exists
 LOG_DIR = Path("logs")
@@ -23,6 +24,59 @@ JSON_FORMATTER = {
     "format": "%(asctime)s %(levelname)s %(name)s %(message)s",
     "datefmt": "%Y-%m-%d %H:%M:%S",
 }
+
+# Global queue listener instance
+_queue_listener = None
+
+def setup_async_logging():
+    """Setup async logging with QueueHandler and QueueListener"""
+    global _queue_listener
+
+    # Create queue for async logging
+    log_queue = Queue(-1)  # Unlimited size
+
+    # Create actual file handlers
+    app_handler = logging.handlers.RotatingFileHandler(
+        filename=str(APP_LOG_FILE),
+        maxBytes=100 * 1024 * 1024,  # 100MB
+        backupCount=10,
+        encoding="utf-8",
+    )
+    app_handler.setLevel(logging.INFO)
+    app_handler.setFormatter(logging.Formatter(
+        fmt=STANDARD_FORMATTER["format"],
+        datefmt=STANDARD_FORMATTER["datefmt"]
+    ))
+
+    audit_handler = logging.handlers.RotatingFileHandler(
+        filename=str(AUDIT_LOG_FILE),
+        maxBytes=100 * 1024 * 1024,  # 100MB
+        backupCount=10,
+        encoding="utf-8",
+    )
+    audit_handler.setLevel(logging.INFO)
+    audit_handler.setFormatter(logging.Formatter(
+        fmt=STANDARD_FORMATTER["format"],
+        datefmt=STANDARD_FORMATTER["datefmt"]
+    ))
+
+    # Create QueueListener with actual handlers
+    _queue_listener = logging.handlers.QueueListener(
+        log_queue,
+        app_handler,
+        audit_handler,
+        respect_handler_level=True
+    )
+    _queue_listener.start()
+
+    return log_queue
+
+def stop_async_logging():
+    """Stop the async logging queue listener"""
+    global _queue_listener
+    if _queue_listener:
+        _queue_listener.stop()
+        _queue_listener = None
 
 LOGGING_CONFIG = {
     "version": 1,
@@ -49,65 +103,39 @@ LOGGING_CONFIG = {
         },
         "file_audit": {
             "class": "logging.handlers.RotatingFileHandler",
-            "formatter": "standard", # Ideally JSON
+            "formatter": "standard",
             "filename": str(AUDIT_LOG_FILE),
             "maxBytes": 100 * 1024 * 1024,  # 100MB
             "backupCount": 10,
             "encoding": "utf-8",
             "level": "INFO",
         },
-        # Queue Handler for Async Logging
-        "queue_listener": {
-            "class": "logging.handlers.QueueHandler",
-            "handlers": ["console", "file_app"], # Default handles console + app log
-            "respect_handler_level": True,
-        },
     },
     "loggers": {
         "sanic.root": {
             "level": "INFO",
-            "handlers": ["queue_listener"], # Send to Queue
+            "handlers": ["console", "file_app"],
             "propagate": False,
         },
         "sanic.error": {
             "level": "INFO",
-            "handlers": ["queue_listener"], # Send to Queue
+            "handlers": ["console", "file_app"],
             "propagate": False,
         },
         "sanic.access": {
             "level": "INFO",
-            "handlers": ["queue_listener"], # Send to Queue
+            "handlers": ["console", "file_app"],
             "propagate": False,
         },
-        # Dedicated Logger for Audit
+        # Dedicated Logger for Audit - will be replaced with QueueHandler
         "audit": {
             "level": "INFO",
-            "handlers": ["file_audit"], # Direct to file (will wrap in queue in app setup if needed, or keep separate)
+            "handlers": ["file_audit"],
             "propagate": False,
         }
     },
     "root": {
         "level": "INFO",
-        "handlers": ["queue_listener"], # Send to Queue
+        "handlers": ["console", "file_app"],
     }
 }
-
-def setup_logging_queue():
-    """
-    Sets up the QueueListener to handle logs asynchronously.
-    Returns the listener instance which should be started and stopped with the app.
-    """
-    import atexit
-    
-    # Create the queue
-    log_queue = queue.Queue(-1) # Infinite queue
-    
-    # Get the actual handler instances based on the config names
-    # Note: dictConfig creates the handlers. We need to access them to pass to QueueListener.
-    # But standard dictConfig doesn't expose them easily. 
-    # A common pattern is to manually instantiate the QueueListener after dictConfig.
-    
-    # For simplicity in this context, we will rely on a slightly different pattern:
-    # We will let the app setup (llm_server_app.py) initialize the QueueListener 
-    # because it needs access to the created handler objects.
-    pass

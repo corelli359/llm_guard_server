@@ -1,19 +1,33 @@
 from sanic import Sanic, response
-from config.settings import Config
 from services import create_routers
 from sanic.log import logger
-from utils.logging_config import LOGGING_CONFIG
+from utils.logging_config import LOGGING_CONFIG, setup_async_logging, stop_async_logging
 from db import DBConnector
 from tools.db_tools import DBConnectTool
 from tools.sensitive_tools import SensitiveAutomatonLoader
 # from config.settings import SENSITIVE_DICT_PATH, SENSITIVE_DICT
 from tools.data_tool import DataProvider, DataInitPromise
 from utils.error_handler import setup_exception_handlers
+from .middleware import setup_audit_middleware
+import logging
+
 
 
 def create_app() -> Sanic:
     app = Sanic("GuardrailsService", log_config=LOGGING_CONFIG)
-    setup_exception_handlers(app)
+
+    # Setup async logging with QueueHandler
+    log_queue = setup_async_logging()
+
+    # Replace audit logger handler with QueueHandler for async logging
+    audit_logger = logging.getLogger("audit")
+    audit_logger.handlers.clear()
+    queue_handler = logging.handlers.QueueHandler(log_queue)
+    audit_logger.addHandler(queue_handler)
+    audit_logger.setLevel(logging.INFO)
+
+    setup_audit_middleware(app)
+    # setup_exception_handlers(app)
 
     # # Load Config
     # app.config.update(
@@ -58,12 +72,17 @@ def create_app() -> Sanic:
     # except Exception as e:
     #     logger.error(f"Failed to load global sensitive words: {e}")
 
+    @app.route("/health")
+    async def health_check(request):
+        return response.json({"status": "ok"})
+
     @app.main_process_start
     async def start(app, loop):
         logger.info(f"!!!!!!Server starting ")
 
-    @app.route("/health")
-    async def health_check(request):
-        return response.json({"status": "ok"})
+    @app.before_server_stop
+    async def cleanup(app, loop):
+        logger.info("Stopping async logging...")
+        stop_async_logging()
 
     return app
