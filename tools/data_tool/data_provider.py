@@ -182,7 +182,7 @@ async def load_custom_words(ctx: DataProvider):
         result_rules,
         columns=[
             "scenario_id",
-            "rule",
+            "rule_key",
             "strategy",
         ],
     )

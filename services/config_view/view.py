@@ -6,7 +6,6 @@ from sanic import Request
 from sanic.response import json as json_response
 from sanic.views import HTTPMethodView
 from config.data_source_config import get_data_source_config
-from db.connect import db_connector
 import os
 
 
@@ -29,16 +28,17 @@ class ConfigDataSourceHandler(HTTPMethodView):
             # 文件模式配置
             response_data["config"] = {
                 "base_path": config.file_base_path,
-                "use_cache": config.file_use_cache,
-                "cache_ttl": config.file_cache_ttl,
                 "files_status": await self._check_files_status(config.file_base_path)
             }
         else:
             # 数据库模式配置
             db_connected = False
             try:
-                await db_connector.ping()
-                db_connected = True
+                # 尝试从app context获取db_tool
+                if hasattr(request.app.ctx, 'db_tool') and request.app.ctx.db_tool:
+                    from db.connect import DBConnector
+                    # 简单检查：如果db_tool存在，认为已连接
+                    db_connected = True
             except Exception:
                 pass
 

@@ -75,29 +75,59 @@ class FileDataLoader:
         data = self._read_json_file("global_keywords.json")
         return self._convert_to_model(data, GlobalKeywords)
 
-    async def get_all_scenario_keywords(self) -> List[ScenarioKeywords]:
-        """获取所有场景关键词"""
+    async def get_all_scenario_keywords(self):
+        """获取所有场景关键词，返回元组列表以兼容数据库模式"""
         data = self._read_json_file("scenario_keywords.json")
-        return self._convert_to_model(data, ScenarioKeywords)
+        models = self._convert_to_model(data, ScenarioKeywords)
+        # 返回元组列表，与数据库模式的 Row 格式一致
+        return [
+            (m.scenario_id, m.keyword, m.tag_code, m.category, m.risk_level)
+            for m in models
+            if m.is_active
+        ]
 
     async def get_scenario_keywords_by_appid(self, app_id: str) -> List[ScenarioKeywords]:
-        """根据app_id获取场景关键词"""
-        all_keywords = await self.get_all_scenario_keywords()
-        return [kw for kw in all_keywords if kw.scenario_id == app_id]
+        """根据app_id获取场景关键词，返回 ORM 对象列表"""
+        data = self._read_json_file("scenario_keywords.json")
+        models = self._convert_to_model(data, ScenarioKeywords)
+        return [kw for kw in models if kw.scenario_id == app_id and kw.is_active]
 
-    async def get_all_scenario_policies(self) -> List[RuleScenarioPolicy]:
-        """获取所有场景策略"""
+    async def get_all_scenario_policies(self):
+        """获取所有场景策略，返回元组列表以兼容数据库模式"""
         data = self._read_json_file("scenario_policies.json")
-        return self._convert_to_model(data, RuleScenarioPolicy)
+        models = self._convert_to_model(data, RuleScenarioPolicy)
+        # 返回元组列表，与数据库模式的 Row 格式一致
+        # rule 格式: match_value-extra_condition (如果 extra_condition 为空则只有 match_value)
+        # 只返回 match_type == "TAG" 且 rule_mode == 1 的记录
+        return [
+            (
+                m.scenario_id,
+                f"{m.match_value}-{m.extra_condition or ''}".rstrip('-'),
+                m.strategy,
+            )
+            for m in models
+            if m.is_active and m.rule_mode == 1 and m.match_type == "TAG"
+        ]
 
     async def get_scenario_rule_by_appid(self, app_id: str) -> List[RuleScenarioPolicy]:
-        """根据app_id获取场景规则"""
-        all_policies = await self.get_all_scenario_policies()
-        return [policy for policy in all_policies if policy.scenario_id == app_id]
+        """根据app_id获取场景规则，返回 ORM 对象列表"""
+        data = self._read_json_file("scenario_policies.json")
+        models = self._convert_to_model(data, RuleScenarioPolicy)
+        return [
+            policy
+            for policy in models
+            if policy.scenario_id == app_id and policy.is_active and policy.rule_mode == 1
+        ]
 
     async def get_vip_scenario_by_appid(self, app_id: str) -> List[RuleScenarioPolicy]:
-        """根据app_id获取VIP场景规则（别名方法）"""
-        return await self.get_scenario_rule_by_appid(app_id)
+        """根据app_id获取VIP场景规则，返回 ORM 对象列表"""
+        data = self._read_json_file("scenario_policies.json")
+        models = self._convert_to_model(data, RuleScenarioPolicy)
+        return [
+            policy
+            for policy in models
+            if policy.scenario_id == app_id and policy.is_active and policy.rule_mode == 0
+        ]
 
     async def get_all_global_defaults(self) -> List[RuleGlobalDefaults]:
         """获取所有全局默认规则"""
@@ -109,9 +139,22 @@ class FileDataLoader:
         data = self._read_json_file("meta_tags.json")
         return self._convert_to_model(data, MetaTags)
 
-    async def load_all_vip(self) -> List[RuleScenarioPolicy]:
-        """加载所有VIP规则（别名方法）"""
-        return await self.get_all_scenario_policies()
+    async def load_all_vip(self):
+        """加载所有VIP规则，返回元组列表以兼容数据库模式"""
+        data = self._read_json_file("scenario_policies.json")
+        models = self._convert_to_model(data, RuleScenarioPolicy)
+        # 返回元组列表，与数据库模式的 Row 格式一致
+        return [
+            (
+                m.scenario_id,
+                m.match_value,
+                m.extra_condition,
+                m.strategy,
+                m.match_type,
+            )
+            for m in models
+            if m.is_active and m.rule_mode == 0
+        ]
 
     async def load_global_rules(self) -> Dict[str, DecisionClassifyEnum]:
         """加载全局规则（与DBConnectTool接口一致）"""

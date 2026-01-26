@@ -1,0 +1,653 @@
+[
+  {
+    "id": "0171ada4-e0fd-46b6-b8c5-551d339cdfde",
+    "tag_code": "A.2.12",
+    "extra_condition": "SAFE",
+    "strategy": "REWRITE",
+    "is_active": true
+  },
+  {
+    "id": "0870383f-ea88-41c1-98a0-33625589a396",
+    "tag_code": "A.1.2",
+    "extra_condition": "UNSAFE",
+    "strategy": "BLOCK",
+    "is_active": true
+  },
+  {
+    "id": "0c9e3c4e-f93b-4683-880c-eb568b58fdff",
+    "tag_code": "A.1.5",
+    "extra_condition": "SAFE",
+    "strategy": "REWRITE",
+    "is_active": true
+  },
+  {
+    "id": "0e3b688f-e411-40a2-a4ea-6766a8a4b867",
+    "tag_code": "A.4.29",
+    "extra_condition": "SAFE",
+    "strategy": "PASS",
+    "is_active": true
+  },
+  {
+    "id": "0e669ae4-3502-4929-a7fa-d42ca2b791d9",
+    "tag_code": "A.1.4",
+    "extra_condition": "UNSAFE",
+    "strategy": "BLOCK",
+    "is_active": true
+  },
+  {
+    "id": "14865c5f-2d70-4e72-8842-c079d15e91f8",
+    "tag_code": "A.1.7",
+    "extra_condition": "CONTROVERSIAL",
+    "strategy": "BLOCK",
+    "is_active": true
+  },
+  {
+    "id": "1dc6e191-a848-45df-8d90-bdc9189a2ead",
+    "tag_code": "A.1.10",
+    "extra_condition": "UNSAFE",
+    "strategy": "BLOCK",
+    "is_active": true
+  },
+  {
+    "id": "1e0a80f6-465a-4fbe-bc5a-b2f020336937",
+    "tag_code": "A.2.11",
+    "extra_condition": "SAFE",
+    "strategy": "REWRITE",
+    "is_active": true
+  },
+  {
+    "id": "1ee24581-47f0-46db-9859-49ae7cfffb2d",
+    "tag_code": "A.4.29",
+    "extra_condition": "CONTROVERSIAL",
+    "strategy": "BLOCK",
+    "is_active": true
+  },
+  {
+    "id": "224c971a-ade4-4be2-a3fa-975d30fdabf4",
+    "tag_code": "A.4.25",
+    "extra_condition": "UNSAFE",
+    "strategy": "BLOCK",
+    "is_active": true
+  },
+  {
+    "id": "22630b03-4e09-4e32-b41b-f53734139506",
+    "tag_code": "A.3.21",
+    "extra_condition": "UNSAFE",
+    "strategy": "BLOCK",
+    "is_active": true
+  },
+  {
+    "id": "23804fff-9f85-4117-8812-eb4e12eae3fc",
+    "tag_code": "A.1.8",
+    "extra_condition": "SAFE",
+    "strategy": "REWRITE",
+    "is_active": true
+  },
+  {
+    "id": "2461a154-dfa5-4de1-8ff7-038bd0aca17b",
+    "tag_code": "A.1.9",
+    "extra_condition": "UNSAFE",
+    "strategy": "BLOCK",
+    "is_active": true
+  },
+  {
+    "id": "30fe4028-9c47-401f-9868-18dba61a1189",
+    "tag_code": "A.5.30",
+    "extra_condition": "SAFE",
+    "strategy": "PASS",
+    "is_active": true
+  },
+  {
+    "id": "3394df48-c2df-4726-9d77-71c51bf9d72c",
+    "tag_code": "A.5.31",
+    "extra_condition": "UNSAFE",
+    "strategy": "BLOCK",
+    "is_active": true
+  },
+  {
+    "id": "35be702f-9968-4cdc-8a48-0c0384ae1be6",
+    "tag_code": "A.4.28",
+    "extra_condition": "CONTROVERSIAL",
+    "strategy": "BLOCK",
+    "is_active": true
+  },
+  {
+    "id": "35c858fb-81a4-4ddd-983d-6fa4b7c66742",
+    "tag_code": "A.4.28",
+    "extra_condition": "SAFE",
+    "strategy": "PASS",
+    "is_active": true
+  },
+  {
+    "id": "374d99a7-c499-4311-a674-c235572262b5",
+    "tag_code": "A.1.3",
+    "extra_condition": "SAFE",
+    "strategy": "REWRITE",
+    "is_active": true
+  },
+  {
+    "id": "418ee988-32fb-43ad-8e17-0c0d9cdf95a5",
+    "tag_code": "A.1.10",
+    "extra_condition": "CONTROVERSIAL",
+    "strategy": "BLOCK",
+    "is_active": true
+  },
+  {
+    "id": "4350fcbb-e8a8-4905-af4b-fd1c77da1f95",
+    "tag_code": "A.1.9",
+    "extra_condition": "CONTROVERSIAL",
+    "strategy": "BLOCK",
+    "is_active": true
+  },
+  {
+    "id": "43fde6a7-b7c5-4631-bc8c-307239a16ac9",
+    "tag_code": "A.2.14",
+    "extra_condition": "UNSAFE",
+    "strategy": "BLOCK",
+    "is_active": true
+  },
+  {
+    "id": "4496125f-2dfb-49d9-9220-71ff6fef6517",
+    "tag_code": "A.1.3",
+    "extra_condition": "UNSAFE",
+    "strategy": "BLOCK",
+    "is_active": true
+  },
+  {
+    "id": "449f6f7c-05e2-4673-b0e5-18094e7dce06",
+    "tag_code": "A.2.18",
+    "extra_condition": "SAFE",
+    "strategy": "REWRITE",
+    "is_active": true
+  },
+  {
+    "id": "463bcd44-e8be-448a-8133-5a035bd6a73f",
+    "tag_code": "A.1.9",
+    "extra_condition": "SAFE",
+    "strategy": "REWRITE",
+    "is_active": true
+  },
+  {
+    "id": "48967753-7899-4baa-b612-f5fe30a3163e",
+    "tag_code": "A.1.8",
+    "extra_condition": "CONTROVERSIAL",
+    "strategy": "BLOCK",
+    "is_active": true
+  },
+  {
+    "id": "4cc171fa-2f3f-4b40-b75b-fa5750e64d8a",
+    "tag_code": "A.3.21",
+    "extra_condition": "CONTROVERSIAL",
+    "strategy": "BLOCK",
+    "is_active": true
+  },
+  {
+    "id": "4e5f42e2-387d-4bb1-a5d5-f119c3bf3df3",
+    "tag_code": "A.3.22",
+    "extra_condition": "SAFE",
+    "strategy": "PASS",
+    "is_active": true
+  },
+  {
+    "id": "4fda5b48-59d8-424a-bdc9-35c103bb8696",
+    "tag_code": "A.2.20",
+    "extra_condition": "SAFE",
+    "strategy": "REWRITE",
+    "is_active": true
+  },
+  {
+    "id": "50882fae-db5b-45e4-821d-8f2403109001",
+    "tag_code": "A.2.19",
+    "extra_condition": "UNSAFE",
+    "strategy": "REVIEW",
+    "is_active": true
+  },
+  {
+    "id": "5277c93f-4e22-43a7-b4c8-ddcad1667ee0",
+    "tag_code": "A.1.4",
+    "extra_condition": "SAFE",
+    "strategy": "REWRITE",
+    "is_active": true
+  },
+  {
+    "id": "55ed039e-e4bd-4d6b-af4b-64549faaa569",
+    "tag_code": "A.4.26",
+    "extra_condition": "UNSAFE",
+    "strategy": "BLOCK",
+    "is_active": true
+  },
+  {
+    "id": "588adda1-6025-4541-9d4e-f2dc2db6da4a",
+    "tag_code": "A.2.15",
+    "extra_condition": "CONTROVERSIAL",
+    "strategy": "BLOCK",
+    "is_active": true
+  },
+  {
+    "id": "61f2e235-435e-44fb-97f3-6e6be2099831",
+    "tag_code": "A.2.15",
+    "extra_condition": "UNSAFE",
+    "strategy": "BLOCK",
+    "is_active": true
+  },
+  {
+    "id": "67bd6eb1-8e56-4e62-bd14-2c469894ec39",
+    "tag_code": "A.2.17",
+    "extra_condition": "SAFE",
+    "strategy": "REWRITE",
+    "is_active": true
+  },
+  {
+    "id": "67d46bec-0fc7-4fda-a4d2-1e95625a1329",
+    "tag_code": "A.2.20",
+    "extra_condition": "CONTROVERSIAL",
+    "strategy": "BLOCK",
+    "is_active": true
+  },
+  {
+    "id": "6a82f848-8fcf-45a3-a239-0db204a11589",
+    "tag_code": "A.2.13",
+    "extra_condition": "UNSAFE",
+    "strategy": "BLOCK",
+    "is_active": true
+  },
+  {
+    "id": "6c355fab-8269-4aed-a3aa-f518a0c75454",
+    "tag_code": "A.1.5",
+    "extra_condition": "UNSAFE",
+    "strategy": "BLOCK",
+    "is_active": true
+  },
+  {
+    "id": "6c8da408-ee0f-4d4f-a9c4-eeefe7f6bf7d",
+    "tag_code": "A.1.7",
+    "extra_condition": "SAFE",
+    "strategy": "REWRITE",
+    "is_active": true
+  },
+  {
+    "id": "6de06a48-2490-48ec-b226-5dbd7f9a3d89",
+    "tag_code": "A.1.1",
+    "extra_condition": "SAFE",
+    "strategy": "REWRITE",
+    "is_active": true
+  },
+  {
+    "id": "6e0f0655-e737-4ff1-87ff-52750ac6bd3d",
+    "tag_code": "A.2.16",
+    "extra_condition": "CONTROVERSIAL",
+    "strategy": "BLOCK",
+    "is_active": true
+  },
+  {
+    "id": "6eb5792d-9fbe-4acb-a1c1-b6056083ad50",
+    "tag_code": "A.1.3",
+    "extra_condition": "CONTROVERSIAL",
+    "strategy": "BLOCK",
+    "is_active": true
+  },
+  {
+    "id": "71f6913a-db05-4622-863f-401dac6fb230",
+    "tag_code": "A.1.2",
+    "extra_condition": "CONTROVERSIAL",
+    "strategy": "BLOCK",
+    "is_active": true
+  },
+  {
+    "id": "75e9fca0-cccb-4250-a968-0c8c6ca99790",
+    "tag_code": "A.1.6",
+    "extra_condition": "UNSAFE",
+    "strategy": "BLOCK",
+    "is_active": true
+  },
+  {
+    "id": "7668c8b7-6817-4047-b403-afdd8e773b19",
+    "tag_code": "A.1.8",
+    "extra_condition": "UNSAFE",
+    "strategy": "BLOCK",
+    "is_active": true
+  },
+  {
+    "id": "7a07852f-a0b3-4016-8537-4693f7b21472",
+    "tag_code": "A.2.18",
+    "extra_condition": "CONTROVERSIAL",
+    "strategy": "BLOCK",
+    "is_active": true
+  },
+  {
+    "id": "7b1b5a51-4905-4ce6-8178-daaad1058661",
+    "tag_code": "A.4.27",
+    "extra_condition": "CONTROVERSIAL",
+    "strategy": "BLOCK",
+    "is_active": true
+  },
+  {
+    "id": "859dd5f3-fc55-4d48-8563-c3f4a8948c75",
+    "tag_code": "A.2.13",
+    "extra_condition": "SAFE",
+    "strategy": "REWRITE",
+    "is_active": true
+  },
+  {
+    "id": "886971e8-cc38-4e75-ae8f-53f06f982c85",
+    "tag_code": "A.3.23",
+    "extra_condition": "SAFE",
+    "strategy": "PASS",
+    "is_active": true
+  },
+  {
+    "id": "89db8128-8d62-498f-84a3-5c858f9db773",
+    "tag_code": "A.1.1",
+    "extra_condition": "UNSAFE",
+    "strategy": "BLOCK",
+    "is_active": true
+  },
+  {
+    "id": "8bd85839-9b30-4a18-9078-bb8716fa5093",
+    "tag_code": "A.2.15",
+    "extra_condition": "SAFE",
+    "strategy": "REWRITE",
+    "is_active": true
+  },
+  {
+    "id": "8be09d30-ef16-4e68-acd9-219cb4cd004e",
+    "tag_code": "A.5.30",
+    "extra_condition": "CONTROVERSIAL",
+    "strategy": "BLOCK",
+    "is_active": true
+  },
+  {
+    "id": "8dcb5290-d910-4ab4-9bb4-1e0296ce2e53",
+    "tag_code": "A.2.20",
+    "extra_condition": "UNSAFE",
+    "strategy": "BLOCK",
+    "is_active": true
+  },
+  {
+    "id": "8f38f09c-8902-4c57-8015-5238ccd80b4e",
+    "tag_code": "A.1.2",
+    "extra_condition": "SAFE",
+    "strategy": "REWRITE",
+    "is_active": true
+  },
+  {
+    "id": "9043dc4e-697e-4ab5-919d-225769813926",
+    "tag_code": "A.1.7",
+    "extra_condition": "UNSAFE",
+    "strategy": "BLOCK",
+    "is_active": true
+  },
+  {
+    "id": "93930c09-4183-4533-b5a5-19ff7968a057",
+    "tag_code": "A.3.24",
+    "extra_condition": "CONTROVERSIAL",
+    "strategy": "BLOCK",
+    "is_active": true
+  },
+  {
+    "id": "96023a04-138c-4bbb-8cb2-ae2b775098d6",
+    "tag_code": "A.4.29",
+    "extra_condition": "UNSAFE",
+    "strategy": "BLOCK",
+    "is_active": true
+  },
+  {
+    "id": "981b071e-3617-4235-8dd4-00916232a105",
+    "tag_code": "A.3.21",
+    "extra_condition": "SAFE",
+    "strategy": "PASS",
+    "is_active": true
+  },
+  {
+    "id": "9ac849fc-76f1-4d4c-8eac-66569a105a61",
+    "tag_code": "A.2.12",
+    "extra_condition": "CONTROVERSIAL",
+    "strategy": "BLOCK",
+    "is_active": true
+  },
+  {
+    "id": "9dd3ad78-c400-41fb-8c38-5e411ac51aa3",
+    "tag_code": "A.3.22",
+    "extra_condition": "UNSAFE",
+    "strategy": "BLOCK",
+    "is_active": true
+  },
+  {
+    "id": "9dd4961d-c091-49e2-8735-39c058760344",
+    "tag_code": "A.4.27",
+    "extra_condition": "UNSAFE",
+    "strategy": "BLOCK",
+    "is_active": true
+  },
+  {
+    "id": "9fe3df2e-8a78-40d9-b190-deab113855d0",
+    "tag_code": "A.4.25",
+    "extra_condition": "SAFE",
+    "strategy": "PASS",
+    "is_active": true
+  },
+  {
+    "id": "a66fb169-de78-49b0-ac7e-d24ad633a91e",
+    "tag_code": "A.2.18",
+    "extra_condition": "UNSAFE",
+    "strategy": "BLOCK",
+    "is_active": true
+  },
+  {
+    "id": "aa0b3d8d-5c0d-4c3e-a4b6-732c6d3f50ac",
+    "tag_code": "A.5.30",
+    "extra_condition": "UNSAFE",
+    "strategy": "BLOCK",
+    "is_active": true
+  },
+  {
+    "id": "aa679057-27f0-44de-a202-9f07e8ab46ce",
+    "tag_code": "A.1.4",
+    "extra_condition": "CONTROVERSIAL",
+    "strategy": "BLOCK",
+    "is_active": true
+  },
+  {
+    "id": "ae352bf4-47fa-40b9-b0d8-49b124bd7c35",
+    "tag_code": "A.3.24",
+    "extra_condition": "UNSAFE",
+    "strategy": "BLOCK",
+    "is_active": true
+  },
+  {
+    "id": "aea002df-3041-4b8f-b9b3-e08250cc2878",
+    "tag_code": "A.1.10",
+    "extra_condition": "SAFE",
+    "strategy": "REWRITE",
+    "is_active": true
+  },
+  {
+    "id": "af6a91f1-08cb-4f3a-b5c3-16c22792b8c7",
+    "tag_code": "A.1.5",
+    "extra_condition": "CONTROVERSIAL",
+    "strategy": "BLOCK",
+    "is_active": true
+  },
+  {
+    "id": "b220be32-bfd8-40aa-bc05-2d7ed5b9a28e",
+    "tag_code": "A.3.22",
+    "extra_condition": "CONTROVERSIAL",
+    "strategy": "BLOCK",
+    "is_active": true
+  },
+  {
+    "id": "b220c6bf-691c-4beb-ac17-301b38eb0fb9",
+    "tag_code": "A.3.23",
+    "extra_condition": "UNSAFE",
+    "strategy": "BLOCK",
+    "is_active": true
+  },
+  {
+    "id": "b2690bdd-e166-4e6a-8ad3-d52b28387a75",
+    "tag_code": "A.1.1",
+    "extra_condition": "CONTROVERSIAL",
+    "strategy": "BLOCK",
+    "is_active": true
+  },
+  {
+    "id": "b4a4e0f2-7040-4839-9de6-2e082f1d629b",
+    "tag_code": "A.2.13",
+    "extra_condition": "CONTROVERSIAL",
+    "strategy": "BLOCK",
+    "is_active": true
+  },
+  {
+    "id": "b5eb7e92-9b81-416c-9b0d-0da6b86f7872",
+    "tag_code": "A.2.11",
+    "extra_condition": "UNSAFE",
+    "strategy": "BLOCK",
+    "is_active": true
+  },
+  {
+    "id": "b5f7729a-5bc7-4c56-8ecd-44db0e67c01a",
+    "tag_code": "A.4.26",
+    "extra_condition": "CONTROVERSIAL",
+    "strategy": "BLOCK",
+    "is_active": true
+  },
+  {
+    "id": "b63a8b97-d168-4497-9f4c-10ca5e02909f",
+    "tag_code": "A.2.17",
+    "extra_condition": "UNSAFE",
+    "strategy": "BLOCK",
+    "is_active": true
+  },
+  {
+    "id": "babca1a1-65f9-4f81-a371-5592336a0329",
+    "tag_code": "A.2.14",
+    "extra_condition": "SAFE",
+    "strategy": "REWRITE",
+    "is_active": true
+  },
+  {
+    "id": "beba561b-10ad-4777-ac70-6daba88002a6",
+    "tag_code": "A.2.17",
+    "extra_condition": "CONTROVERSIAL",
+    "strategy": "BLOCK",
+    "is_active": true
+  },
+  {
+    "id": "c026294e-6750-486a-a135-f1d4a0a1ef4b",
+    "tag_code": "A.2.19",
+    "extra_condition": "CONTROVERSIAL",
+    "strategy": "REVIEW",
+    "is_active": true
+  },
+  {
+    "id": "c1802289-bf50-4ac5-b5fd-dc7547c6c2d5",
+    "tag_code": "A.2.16",
+    "extra_condition": "SAFE",
+    "strategy": "REWRITE",
+    "is_active": true
+  },
+  {
+    "id": "cb91764f-f076-4ba8-9982-c100fdc3bd56",
+    "tag_code": "A.5.31",
+    "extra_condition": "CONTROVERSIAL",
+    "strategy": "BLOCK",
+    "is_active": true
+  },
+  {
+    "id": "d3b7a974-b529-44fa-865c-dd96368572bd",
+    "tag_code": "A.4.27",
+    "extra_condition": "SAFE",
+    "strategy": "PASS",
+    "is_active": true
+  },
+  {
+    "id": "d59ac1c9-9028-4e3d-af72-b75b904713c4",
+    "tag_code": "A.2.12",
+    "extra_condition": "UNSAFE",
+    "strategy": "BLOCK",
+    "is_active": true
+  },
+  {
+    "id": "d7c006d0-d718-4113-a031-401ff3095903",
+    "tag_code": "A.3.23",
+    "extra_condition": "CONTROVERSIAL",
+    "strategy": "BLOCK",
+    "is_active": true
+  },
+  {
+    "id": "db1aebb0-ef3b-474c-9237-f6a315f73333",
+    "tag_code": "A.2.19",
+    "extra_condition": "SAFE",
+    "strategy": "REVIEW",
+    "is_active": true
+  },
+  {
+    "id": "e03b1575-40b1-44a2-b10f-e55ac824ad8c",
+    "tag_code": "A.4.26",
+    "extra_condition": "SAFE",
+    "strategy": "PASS",
+    "is_active": true
+  },
+  {
+    "id": "e063058e-74ed-45bb-9b3a-00cf6652f489",
+    "tag_code": "A.1.6",
+    "extra_condition": "SAFE",
+    "strategy": "REWRITE",
+    "is_active": true
+  },
+  {
+    "id": "e20a3fba-7500-4764-97a9-31dde4df6a4a",
+    "tag_code": "A.3.24",
+    "extra_condition": "SAFE",
+    "strategy": "PASS",
+    "is_active": true
+  },
+  {
+    "id": "e8f0939d-26e6-4da9-be28-401adfd4915f",
+    "tag_code": "A.4.28",
+    "extra_condition": "UNSAFE",
+    "strategy": "BLOCK",
+    "is_active": true
+  },
+  {
+    "id": "f134b5d1-1819-4169-ac74-50a780eca9b2",
+    "tag_code": "A.2.16",
+    "extra_condition": "UNSAFE",
+    "strategy": "BLOCK",
+    "is_active": true
+  },
+  {
+    "id": "f184e276-7494-4114-a375-c4ab9e6f5f93",
+    "tag_code": "A.4.25",
+    "extra_condition": "CONTROVERSIAL",
+    "strategy": "BLOCK",
+    "is_active": true
+  },
+  {
+    "id": "f288f399-1315-4d75-a2b6-86e5bc05885e",
+    "tag_code": "A.5.31",
+    "extra_condition": "SAFE",
+    "strategy": "PASS",
+    "is_active": true
+  },
+  {
+    "id": "f483dd7e-4baa-4155-a52f-767dbe270b54",
+    "tag_code": "A.1.6",
+    "extra_condition": "CONTROVERSIAL",
+    "strategy": "BLOCK",
+    "is_active": true
+  },
+  {
+    "id": "f9f5df56-52d8-42f2-90a8-998497744aa5",
+    "tag_code": "A.2.14",
+    "extra_condition": "CONTROVERSIAL",
+    "strategy": "BLOCK",
+    "is_active": true
+  },
+  {
+    "id": "fea9742c-1197-4751-8a9e-885d18949f6c",
+    "tag_code": "A.2.11",
+    "extra_condition": "CONTROVERSIAL",
+    "strategy": "BLOCK",
+    "is_active": true
+  }
+]

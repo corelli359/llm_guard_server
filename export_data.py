@@ -5,9 +5,16 @@
 import asyncio
 import orjson
 import os
-from db.connect import DBConnector
-from db.dao import RuleDataLoaderDAO
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
+from sqlalchemy.future import select
 from config.db_config import DATABASE_URL
+from models.db_meta import (
+    GlobalKeywords,
+    MetaTags,
+    ScenarioKeywords,
+    RuleScenarioPolicy,
+    RuleGlobalDefaults,
+)
 
 
 async def export_all_data(output_dir: str = "data"):
@@ -20,27 +27,32 @@ async def export_all_data(output_dir: str = "data"):
     os.makedirs(output_dir, exist_ok=True)
 
     # 初始化数据库连接
-    connector = DBConnector()
-    connector.db_url = DATABASE_URL
-    connector.conn = connector._create_engine()
+    from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
+
+    engine = create_async_engine(
+        DATABASE_URL,
+        echo=False,
+        pool_size=10,
+        max_overflow=20,
+        pool_recycle=3600,
+    )
 
     # 创建会话工厂
-    from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession
     session_factory = async_sessionmaker(
-        bind=connector.conn,
+        bind=engine,
         class_=AsyncSession,
         expire_on_commit=False,
         autoflush=False,
     )
 
     async with session_factory() as session:
-        dao = RuleDataLoaderDAO(session)
-
         print("开始导出数据...")
 
         # 1. 导出全局关键词
         print("导出 global_keywords...")
-        keywords = await dao.get_all_global_keywords()
+        stmt = select(GlobalKeywords).where(GlobalKeywords.is_active == True)
+        result = await session.execute(stmt)
+        keywords = result.scalars().all()
         data = [
             {
                 "id": k.id,
@@ -57,7 +69,9 @@ async def export_all_data(output_dir: str = "data"):
 
         # 2. 导出元数据标签
         print("导出 meta_tags...")
-        tags = await dao.get_all_tags()
+        stmt = select(MetaTags).where(MetaTags.is_active == True)
+        result = await session.execute(stmt)
+        tags = result.scalars().all()
         data = [
             {
                 "id": t.id,
@@ -75,7 +89,9 @@ async def export_all_data(output_dir: str = "data"):
 
         # 3. 导出场景关键词
         print("导出 scenario_keywords...")
-        scenario_keywords = await dao.get_all_scenario_keywords()
+        stmt = select(ScenarioKeywords).where(ScenarioKeywords.is_active == True)
+        result = await session.execute(stmt)
+        scenario_keywords = result.scalars().all()
         data = [
             {
                 "id": k.id,
@@ -94,7 +110,9 @@ async def export_all_data(output_dir: str = "data"):
 
         # 4. 导出场景策略
         print("导出 scenario_policies...")
-        policies = await dao.get_all_scenario_policies()
+        stmt = select(RuleScenarioPolicy).where(RuleScenarioPolicy.is_active == True)
+        result = await session.execute(stmt)
+        policies = result.scalars().all()
         data = [
             {
                 "id": p.id,
@@ -114,7 +132,9 @@ async def export_all_data(output_dir: str = "data"):
 
         # 5. 导出全局默认策略
         print("导出 global_defaults...")
-        defaults = await dao.get_all_global_defaults()
+        stmt = select(RuleGlobalDefaults).where(RuleGlobalDefaults.is_active == True)
+        result = await session.execute(stmt)
+        defaults = result.scalars().all()
         data = [
             {
                 "id": d.id,
@@ -128,6 +148,9 @@ async def export_all_data(output_dir: str = "data"):
         with open(os.path.join(output_dir, "global_defaults.json"), "wb") as f:
             f.write(orjson.dumps(data, option=orjson.OPT_INDENT_2))
         print(f"  ✓ 导出 {len(data)} 条记录")
+
+    # 关闭数据库连接
+    await engine.dispose()
 
     print(f"\n✓ 所有数据已导出到: {output_dir}/")
     print("\n下一步：")

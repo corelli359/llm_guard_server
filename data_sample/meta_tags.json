@@ -1,0 +1,290 @@
+[
+  {
+    "id": "095012e9-f12c-11f0-a023-deaae5e25fa8",
+    "tag_code": "A.1",
+    "tag_name": "违反社会主义核心价值观",
+    "parent_code": null,
+    "level": 1,
+    "is_active": true
+  },
+  {
+    "id": "0955e20e-f12c-11f0-a023-deaae5e25fa8",
+    "tag_code": "A.1.1",
+    "tag_name": "煽动颠覆国家政权",
+    "parent_code": "A.1",
+    "level": 2,
+    "is_active": true
+  },
+  {
+    "id": "0955e499-f12c-11f0-a023-deaae5e25fa8",
+    "tag_code": "A.1.2",
+    "tag_name": "危害国家安全/利益",
+    "parent_code": "A.1",
+    "level": 2,
+    "is_active": true
+  },
+  {
+    "id": "0955e4ff-f12c-11f0-a023-deaae5e25fa8",
+    "tag_code": "A.1.3",
+    "tag_name": "煽动分裂国家",
+    "parent_code": "A.1",
+    "level": 2,
+    "is_active": true
+  },
+  {
+    "id": "0955e54c-f12c-11f0-a023-deaae5e25fa8",
+    "tag_code": "A.1.4",
+    "tag_name": "宣扬恐怖/极端主义",
+    "parent_code": "A.1",
+    "level": 2,
+    "is_active": true
+  },
+  {
+    "id": "0955e599-f12c-11f0-a023-deaae5e25fa8",
+    "tag_code": "A.1.5",
+    "tag_name": "宣扬民族仇恨/歧视",
+    "parent_code": "A.1",
+    "level": 2,
+    "is_active": true
+  },
+  {
+    "id": "0955e5db-f12c-11f0-a023-deaae5e25fa8",
+    "tag_code": "A.1.6",
+    "tag_name": "破坏宗教政策/邪教",
+    "parent_code": "A.1",
+    "level": 2,
+    "is_active": true
+  },
+  {
+    "id": "0955e685-f12c-11f0-a023-deaae5e25fa8",
+    "tag_code": "A.1.7",
+    "tag_name": "编造虚假信息",
+    "parent_code": "A.1",
+    "level": 2,
+    "is_active": true
+  },
+  {
+    "id": "0955e6cd-f12c-11f0-a023-deaae5e25fa8",
+    "tag_code": "A.1.8",
+    "tag_name": "煽动暴力",
+    "parent_code": "A.1",
+    "level": 2,
+    "is_active": true
+  },
+  {
+    "id": "0955e70c-f12c-11f0-a023-deaae5e25fa8",
+    "tag_code": "A.1.9",
+    "tag_name": "宣扬淫秽、色情",
+    "parent_code": "A.1",
+    "level": 2,
+    "is_active": true
+  },
+  {
+    "id": "0955e749-f12c-11f0-a023-deaae5e25fa8",
+    "tag_code": "A.1.10",
+    "tag_name": "其他违反核心价值观",
+    "parent_code": "A.1",
+    "level": 2,
+    "is_active": true
+  },
+  {
+    "id": "09598576-f12c-11f0-a023-deaae5e25fa8",
+    "tag_code": "A.2",
+    "tag_name": "歧视性内容",
+    "parent_code": null,
+    "level": 1,
+    "is_active": true
+  },
+  {
+    "id": "095f0f07-f12c-11f0-a023-deaae5e25fa8",
+    "tag_code": "A.2.11",
+    "tag_name": "民族歧视",
+    "parent_code": "A.2",
+    "level": 2,
+    "is_active": true
+  },
+  {
+    "id": "095f10e8-f12c-11f0-a023-deaae5e25fa8",
+    "tag_code": "A.2.12",
+    "tag_name": "信仰歧视",
+    "parent_code": "A.2",
+    "level": 2,
+    "is_active": true
+  },
+  {
+    "id": "095f1132-f12c-11f0-a023-deaae5e25fa8",
+    "tag_code": "A.2.13",
+    "tag_name": "国别歧视",
+    "parent_code": "A.2",
+    "level": 2,
+    "is_active": true
+  },
+  {
+    "id": "095f116b-f12c-11f0-a023-deaae5e25fa8",
+    "tag_code": "A.2.14",
+    "tag_name": "地域歧视",
+    "parent_code": "A.2",
+    "level": 2,
+    "is_active": true
+  },
+  {
+    "id": "095f11a6-f12c-11f0-a023-deaae5e25fa8",
+    "tag_code": "A.2.15",
+    "tag_name": "性别歧视",
+    "parent_code": "A.2",
+    "level": 2,
+    "is_active": true
+  },
+  {
+    "id": "095f11da-f12c-11f0-a023-deaae5e25fa8",
+    "tag_code": "A.2.16",
+    "tag_name": "年龄歧视",
+    "parent_code": "A.2",
+    "level": 2,
+    "is_active": true
+  },
+  {
+    "id": "095f1209-f12c-11f0-a023-deaae5e25fa8",
+    "tag_code": "A.2.17",
+    "tag_name": "职业歧视",
+    "parent_code": "A.2",
+    "level": 2,
+    "is_active": true
+  },
+  {
+    "id": "095f1237-f12c-11f0-a023-deaae5e25fa8",
+    "tag_code": "A.2.18",
+    "tag_name": "健康歧视",
+    "parent_code": "A.2",
+    "level": 2,
+    "is_active": true
+  },
+  {
+    "id": "095f1266-f12c-11f0-a023-deaae5e25fa8",
+    "tag_code": "A.2.19",
+    "tag_name": "诱导自杀与自残",
+    "parent_code": "A.2",
+    "level": 2,
+    "is_active": true
+  },
+  {
+    "id": "095f129b-f12c-11f0-a023-deaae5e25fa8",
+    "tag_code": "A.2.20",
+    "tag_name": "校园欺凌与网络暴力",
+    "parent_code": "A.2",
+    "level": 2,
+    "is_active": true
+  },
+  {
+    "id": "0962ff6c-f12c-11f0-a023-deaae5e25fa8",
+    "tag_code": "A.3",
+    "tag_name": "侵犯商业权益",
+    "parent_code": null,
+    "level": 1,
+    "is_active": true
+  },
+  {
+    "id": "0966ee53-f12c-11f0-a023-deaae5e25fa8",
+    "tag_code": "A.3.21",
+    "tag_name": "侵犯著作权",
+    "parent_code": "A.3",
+    "level": 2,
+    "is_active": true
+  },
+  {
+    "id": "0966ef7d-f12c-11f0-a023-deaae5e25fa8",
+    "tag_code": "A.3.22",
+    "tag_name": "侵犯商标权",
+    "parent_code": "A.3",
+    "level": 2,
+    "is_active": true
+  },
+  {
+    "id": "0966efbb-f12c-11f0-a023-deaae5e25fa8",
+    "tag_code": "A.3.23",
+    "tag_name": "侵犯专利权",
+    "parent_code": "A.3",
+    "level": 2,
+    "is_active": true
+  },
+  {
+    "id": "0966efef-f12c-11f0-a023-deaae5e25fa8",
+    "tag_code": "A.3.24",
+    "tag_name": "商业秘密/不正当竞争",
+    "parent_code": "A.3",
+    "level": 2,
+    "is_active": true
+  },
+  {
+    "id": "0969fdb7-f12c-11f0-a023-deaae5e25fa8",
+    "tag_code": "A.4",
+    "tag_name": "侵犯他人权益",
+    "parent_code": null,
+    "level": 1,
+    "is_active": true
+  },
+  {
+    "id": "096f2eea-f12c-11f0-a023-deaae5e25fa8",
+    "tag_code": "A.4.25",
+    "tag_name": "侵犯个人隐私",
+    "parent_code": "A.4",
+    "level": 2,
+    "is_active": true
+  },
+  {
+    "id": "096f307d-f12c-11f0-a023-deaae5e25fa8",
+    "tag_code": "A.4.26",
+    "tag_name": "生物特征信息",
+    "parent_code": "A.4",
+    "level": 2,
+    "is_active": true
+  },
+  {
+    "id": "096f30bf-f12c-11f0-a023-deaae5e25fa8",
+    "tag_code": "A.4.27",
+    "tag_name": "侵犯名誉权",
+    "parent_code": "A.4",
+    "level": 2,
+    "is_active": true
+  },
+  {
+    "id": "096f30f2-f12c-11f0-a023-deaae5e25fa8",
+    "tag_code": "A.4.28",
+    "tag_name": "侵犯肖像权",
+    "parent_code": "A.4",
+    "level": 2,
+    "is_active": true
+  },
+  {
+    "id": "096f3126-f12c-11f0-a023-deaae5e25fa8",
+    "tag_code": "A.4.29",
+    "tag_name": "侵犯知情权",
+    "parent_code": "A.4",
+    "level": 2,
+    "is_active": true
+  },
+  {
+    "id": "0971ea58-f12c-11f0-a023-deaae5e25fa8",
+    "tag_code": "A.5",
+    "tag_name": "服务自身安全",
+    "parent_code": null,
+    "level": 1,
+    "is_active": true
+  },
+  {
+    "id": "0974f8c4-f12c-11f0-a023-deaae5e25fa8",
+    "tag_code": "A.5.30",
+    "tag_name": "内容不准确",
+    "parent_code": "A.5",
+    "level": 2,
+    "is_active": true
+  },
+  {
+    "id": "0974f997-f12c-11f0-a023-deaae5e25fa8",
+    "tag_code": "A.5.31",
+    "tag_name": "安全漏洞",
+    "parent_code": "A.5",
+    "level": 2,
+    "is_active": true
+  }
+]

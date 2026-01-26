@@ -1,0 +1,38 @@
+[
+  {
+    "id": "71f56e2d-a4af-491e-9b1b-bd7a372fd836",
+    "scenario_id": "test_001",
+    "keyword": "我去年买了个表",
+    "tag_code": null,
+    "risk_level": "High",
+    "is_active": true,
+    "category": 0
+  },
+  {
+    "id": "78a77f8c-6a77-44f1-864a-239bd51edd30",
+    "scenario_id": "test_001",
+    "keyword": "转账",
+    "tag_code": null,
+    "risk_level": "High",
+    "is_active": true,
+    "category": 0
+  },
+  {
+    "id": "cb8db8e2-117c-47a0-aaaf-b7531e3be8c3",
+    "scenario_id": "test_001",
+    "keyword": "踏马的",
+    "tag_code": "A.1.10",
+    "risk_level": "High",
+    "is_active": true,
+    "category": 1
+  },
+  {
+    "id": "fd205085-43f9-455a-b31f-b4346bd4e47e",
+    "scenario_id": "test_002",
+    "keyword": "天目湖",
+    "tag_code": "A.1",
+    "risk_level": "High",
+    "is_active": true,
+    "category": 1
+  }
+]

@@ -8,3 +8,6 @@ config/apikey_settings.py
 /*.md
 data
 logs
+*.zip
+.env*
+

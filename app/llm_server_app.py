@@ -4,7 +4,7 @@ from sanic.log import logger
 from utils.logging_config import LOGGING_CONFIG, setup_async_logging, stop_async_logging
 from db import DBConnector
 from tools.db_tools import DBConnectTool
-from tools.sensitive_tools import SensitiveAutomatonLoader
+# from tools.sensitive_tools import SensitiveAutomatonLoader
 # from config.settings import SENSITIVE_DICT_PATH, SENSITIVE_DICT
 from tools.data_tool import DataProvider, DataInitPromise
 from tools.data_tool.data_loader_factory import DataLoaderFactory

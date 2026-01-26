@@ -1,0 +1,22 @@
+[
+  {
+    "id": "de7fcfd7-aeab-4cf0-a507-acb81ea3b913",
+    "scenario_id": "test_002",
+    "match_type": "KEYWORD",
+    "match_value": "ABC",
+    "rule_mode": 1,
+    "extra_condition": "A.1",
+    "strategy": "BLOCK",
+    "is_active": true
+  },
+  {
+    "id": "f29b173b-c499-413d-a17b-e6875a6ba102",
+    "scenario_id": "test_002",
+    "match_type": "TAG",
+    "match_value": "A.1",
+    "rule_mode": 0,
+    "extra_condition": "",
+    "strategy": "PASS",
+    "is_active": true
+  }
+]

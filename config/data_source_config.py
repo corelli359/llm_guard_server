@@ -4,7 +4,8 @@
 """
 import os
 from typing import Literal
-from pydantic import BaseSettings, Field
+from pydantic import Field
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class DataSourceConfig(BaseSettings):
@@ -28,27 +29,20 @@ class DataSourceConfig(BaseSettings):
         description="文件存储的基础路径"
     )
 
-    file_use_cache: bool = Field(
-        default=True,
-        description="是否启用文件缓存"
-    )
-
-    file_cache_ttl: int = Field(
-        default=3600,
-        description="文件缓存过期时间（秒）"
-    )
-
     # 数据库模式配置（从现有配置读取）
     db_url: str = Field(
         default="",
         description="数据库连接URL"
     )
 
-    class Config:
-        env_prefix = "DATA_SOURCE_"  # 环境变量前缀
-        case_sensitive = False
-        env_file = ".env"
-        env_file_encoding = "utf-8"
+    # Pydantic v2 配置
+    model_config = SettingsConfigDict(
+        env_prefix="DATA_SOURCE_",  # 环境变量前缀
+        case_sensitive=False,
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore"  # 忽略额外字段
+    )
 
     def is_file_mode(self) -> bool:
         """是否为文件模式"""

@@ -1,5 +1,6 @@
 sanic
 pydantic
+pydantic-settings
 sanic-testing
 orjson
 pyyaml
