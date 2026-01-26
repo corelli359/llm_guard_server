@@ -7,6 +7,8 @@ from tools.db_tools import DBConnectTool
 from tools.sensitive_tools import SensitiveAutomatonLoader
 # from config.settings import SENSITIVE_DICT_PATH, SENSITIVE_DICT
 from tools.data_tool import DataProvider, DataInitPromise
+from tools.data_tool.data_loader_factory import DataLoaderFactory
+from config.data_source_config import get_data_source_config
 from utils.error_handler import setup_exception_handlers
 from .middleware import setup_audit_middleware
 import logging
@@ -37,15 +39,27 @@ def create_app() -> Sanic:
     #     AUTO_RELOAD=Config.AUTO_RELOAD,
     # )
 
-    # Initialize DB and Tools
-    db_client = DBConnector()
-    db_client.init_db(app)
-    # app.ctx.db_client = db_client
+    # 获取数据源配置
+    data_source_config = get_data_source_config()
+    logger.info(f"Data source mode: {data_source_config.mode}")
 
-    db_tool = DBConnectTool(db_client)
-    app.ctx.db_tool = db_tool
+    # Initialize DB and Tools (根据配置决定是否初始化数据库)
+    if data_source_config.is_db_mode():
+        # 数据库模式：初始化数据库连接
+        db_client = DBConnector()
+        db_client.init_db(app)
+        db_tool = DBConnectTool(db_client)
+        app.ctx.db_tool = db_tool
+        data_loader = db_tool
+        logger.info("Using DATABASE mode for data storage")
+    else:
+        # 文件模式：使用文件加载器
+        data_loader = DataLoaderFactory.create()
+        app.ctx.db_tool = None  # 兼容性
+        logger.info(f"Using FILE mode for data storage: {data_source_config.file_base_path}")
 
-    data_provider = DataProvider(app.ctx.db_tool)
+    # 创建数据提供者
+    data_provider = DataProvider(data_loader)
 
     create_routers(app)
 
@@ -53,7 +67,7 @@ def create_app() -> Sanic:
     @app.after_server_start
     async def load_data(app, loop):
         try:
-            logger.info("Loading data from DB...")
+            logger.info(f"Loading data from {data_source_config.mode}...")
             # await app.ctx.db_tool.load_data_from_db()
             data_promise = DataInitPromise()
             data_promise.flow()
@@ -61,7 +75,8 @@ def create_app() -> Sanic:
 
             logger.info("Data loaded successfully.")
         except Exception as e:
-            logger.error(f"Failed to load data from DB: {e}")
+            logger.error(f"Failed to load data: {e}")
+            raise
 
     logger.info("begin to load global sensitive words")
     # try:

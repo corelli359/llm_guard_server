@@ -1,5 +1,5 @@
 from collections import defaultdict
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Union
 from utils import SingleTon, run_in_async
 from tools.db_tools import DBConnectTool
 from .ac_tool import SensitiveAutomatonLoaderByDB
@@ -10,6 +10,7 @@ import pandas as pd
 from sanic.log import logger
 from utils import Promise
 from models import DECISION_MAPPING, ScenarioKeywords
+from config.data_source_config import get_data_source_config
 
 _APP_LOCKS: Dict[str, asyncio.Lock] = {}
 _GLOBAL_LOCK = asyncio.Lock()
@@ -24,8 +25,23 @@ async def get_lock_by_app_id(app_id: str) -> asyncio.Lock:
 
 
 class DataProvider(metaclass=SingleTon):
-    def __init__(self, db_tool: DBConnectTool) -> None:
-        self.db_tool = db_tool
+    def __init__(self, data_loader: Union[DBConnectTool, Any] = None) -> None:
+        """初始化数据提供者
+
+        Args:
+            data_loader: 数据加载器，可以是DBConnectTool或FileDataLoader
+                        如果为None，会根据配置自动创建
+        """
+        # 兼容旧代码：如果传入的是DBConnectTool，保存为db_tool
+        if isinstance(data_loader, DBConnectTool):
+            self.db_tool = data_loader
+            self.data_loader = data_loader
+        else:
+            # 新模式：使用统一的data_loader
+            self.data_loader = data_loader
+            # 为了兼容性，也设置db_tool属性
+            self.db_tool = data_loader if isinstance(data_loader, DBConnectTool) else None
+
         self._global_ac: SensitiveAutomatonLoaderByDB | None = None
 
         self._custom_ac: Dict[str, CustomContainer] = {}
@@ -74,7 +90,7 @@ class DataProvider(metaclass=SingleTon):
         if not self.global_rules:
             try:
                 results: Dict[str, DecisionClassifyEnum] = (
-                    await self.db_tool.load_global_rules()
+                    await self.data_loader.load_global_rules()
                 )
                 self.global_rules = results
 
@@ -85,7 +101,7 @@ class DataProvider(metaclass=SingleTon):
 
         match ac_type:
             case "global":
-                data = await self.db_tool.load_global_words()
+                data = await self.data_loader.load_global_words()
                 self.global_ac = SensitiveAutomatonLoaderByDB()
                 await run_in_async(self.global_ac.load_keywords, data)
             case "customize":
@@ -93,7 +109,7 @@ class DataProvider(metaclass=SingleTon):
                 async with app_id_lock:
                     if app_id and app_id not in self.custom_ac:
                         custom_container = CustomContainer()
-                        black_list, white_list = await self.db_tool.load_custom_words(
+                        black_list, white_list = await self.data_loader.load_custom_words(
                             app_id
                         )
                         if black_list:
@@ -105,7 +121,7 @@ class DataProvider(metaclass=SingleTon):
                                 [_.keyword for _ in white_list]
                             )
 
-                        custom_rule_list = await self.db_tool.load_custom_rule(app_id)
+                        custom_rule_list = await self.data_loader.load_custom_rule(app_id)
                         if custom_rule_list:
                             custom_container.custom_rule = custom_rule_list
 
@@ -121,7 +137,7 @@ class DataProvider(metaclass=SingleTon):
                             vip_black_rules,
                             vip_white_words,
                             vip_white_rules,
-                        ) = await self.db_tool.load_vip_scenario_by_app_id(app_id)
+                        ) = await self.data_loader.load_vip_scenario_by_app_id(app_id)
                         vip_container = CustomVipContainer()
                         if vip_black_words:
                             ac = SensitiveAutomatonLoaderByDB()
@@ -142,21 +158,21 @@ class DataProvider(metaclass=SingleTon):
 
 
 async def load_global_words(ctx: DataProvider):
-    data = await ctx.db_tool.load_global_words()
+    data = await ctx.data_loader.load_global_words()
     ctx.global_ac = SensitiveAutomatonLoaderByDB()
     await run_in_async(ctx.global_ac.load_keywords, data)
     logger.info("global sensitive words loaded success!")
 
 
 async def load_global_rules(ctx: DataProvider):
-    results: Dict[str, DecisionClassifyEnum] = await ctx.db_tool.load_global_rules()
+    results: Dict[str, DecisionClassifyEnum] = await ctx.data_loader.load_global_rules()
     ctx.global_rules = results
     
 
 
 async def load_custom_words(ctx: DataProvider):
-    result_words = await ctx.db_tool.load_all_custom_words()
-    result_rules = await ctx.db_tool.load_all_custom_rules()
+    result_words = await ctx.data_loader.load_all_custom_words()
+    result_rules = await ctx.data_loader.load_all_custom_rules()
     df_words = pd.DataFrame(
         result_words,
         columns=["scenario_id", "keyword", "tag_code", "category", "risk_level"],
@@ -213,7 +229,7 @@ async def load_custom_words(ctx: DataProvider):
 
 
 async def load_custom_words_else(ctx: DataProvider):
-    vip_data = await ctx.db_tool.load_all_vip()
+    vip_data = await ctx.data_loader.load_all_vip()
 
     vip_df = pd.DataFrame(
         vip_data,

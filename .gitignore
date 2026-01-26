@@ -6,3 +6,5 @@ config/apikey_settings.py
 .DS_Store
 .vscode/
 /*.md
+data
+logs

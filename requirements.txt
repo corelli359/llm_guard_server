@@ -1,3 +1,5 @@
 sanic
 pydantic
 sanic-testing
+orjson
+pyyaml
