@@ -4,3 +4,4 @@ pydantic-settings
 sanic-testing
 orjson
 pyyaml
+PyJWT

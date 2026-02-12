@@ -8,3 +8,7 @@ class Config:
     DEBUG = False
     AUTO_RELOAD = True
     WORKER = 1
+
+    # LLM 网关认证配置
+    JWT_SALT = os.getenv("JWT_SALT", "")
+    X_APP_ID = os.getenv("X_APP_ID", "")

@@ -10,4 +10,5 @@ data
 logs
 *.zip
 .env*
+*.md
 

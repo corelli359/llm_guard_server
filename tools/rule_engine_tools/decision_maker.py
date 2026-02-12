@@ -39,7 +39,7 @@ async def rank_by_normal_rules(ctx: SensitiveContext):
     decision_dict: dict = {}
     decision_details: Dict[str, Dict[str, Any]] = {}
     decision: DecisionClassifyEnum = DecisionClassifyEnum.PASS
-    custom = data_provider.custom_ac[ctx.app_id]
+    custom = data_provider.custom_ac.get(ctx.app_id, None)
     if ctx.use_customize_rule and custom:
         if data_provider.custom_ac[ctx.app_id]:
             if custom.custom_rule:
