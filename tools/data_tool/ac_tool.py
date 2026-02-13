@@ -1,7 +1,7 @@
 from typing import Dict
 import threading
 import ahocorasick
-from models import GlobalKeywords, ScenarioKeywords
+from models import GlobalKeywords, ScenarioKeywords, SensitiveContext
 from typing import Any, Union, List, Set
 from utils import Promise
 from dataclasses import dataclass
@@ -13,24 +13,69 @@ class SensitiveAutomatonLoaderByDB:
         self.automaton = None
         self.lock = threading.Lock()
 
-    def load_keywords(self, word_list: List[Union[GlobalKeywords, ScenarioKeywords]]):
+    def load_keywords(
+        self,
+        word_list: List[Union[GlobalKeywords, ScenarioKeywords]],
+        is_global: bool = True,
+    ):
 
         A = ahocorasick.Automaton()
-        for idx, word in enumerate(word_list):
-            payload = (word.keyword, word.tag_code)
-            A.add_word(word.keyword, payload)
+        if is_global:
+            for idx, word in enumerate(word_list):
+                payload = (word.keyword, word.tag_code)
+                A.add_word(word.keyword, payload)
+        else:
+            for idx, word in enumerate(word_list):
+                payload = (
+                    word.keyword,
+                    word.tag_code,
+                    getattr(word, "exemptions", None),
+                )
+                A.add_word(word.keyword, payload)
         A.make_automaton()
         self.automaton = A
 
-    def scan(self, text) -> dict:
+    def scan(
+        self, text, exemption_distance: int = 0, ctx: SensitiveContext | None = None
+    ) -> dict:
         if not self.automaton:
             raise Exception("NO_WORD_LIST_ERROR")
         contains = {}
-        for _, (word, tag_code) in self.automaton.iter(text):
+        for end_index, payload in self.automaton.iter(text):
+            if len(payload) == 3:
+                word, tag_code, exemptions = payload
+            else:
+                word, tag_code = payload
+                exemptions = None
+
+            if len(word) <= 1:
+                continue
+
+            # 豁免词检查
+            if exemptions:
+                start_index = end_index - len(word) + 1
+                exempted = False
+                for ex_word in exemptions:
+                    if exemption_distance == 0:
+                        # 全文匹配
+                        if ex_word in text:
+                            exempted = True
+                            break
+                    else:
+                        # 距离匹配
+                        window_start = max(0, start_index - exemption_distance)
+                        window_end = min(len(text), end_index + 1 + exemption_distance)
+                        if ex_word in text[window_start:window_end]:
+                            exempted = True
+                            break
+                if exempted:
+                    if ctx:
+                        ctx.exemption_set.add(word)
+                    continue
+
             if tag_code not in contains:
                 contains[tag_code] = []
-            if len(word) > 1:
-                contains[tag_code].append(word)
+            contains[tag_code].append(word)
         return contains
 
 
@@ -52,6 +97,3 @@ class CustomVipContainer(LoadBase):
     black_rule: Dict[str, Any] | None = None
     white_rule: Dict[str, Any] | None = None
     white_ac: SensitiveAutomatonLoaderByDB | None = None
-
-
-

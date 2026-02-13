@@ -62,7 +62,7 @@
 #     strategy = Column(String)
 #     is_active = Column(Boolean)
 from typing import Optional
-from sqlalchemy import String, Integer, Boolean, CHAR
+from sqlalchemy import String, Integer, Boolean, CHAR, JSON
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
@@ -113,6 +113,7 @@ class ScenarioKeywords(Base):
     id: Mapped[str] = mapped_column(CHAR(36), primary_key=True)
     scenario_id: Mapped[str] = mapped_column(String(64), index=True)
     keyword: Mapped[str] = mapped_column(String(255))
+    exemptions: Mapped[Optional[list]] = mapped_column(JSON, nullable=True, comment="豁免词列表")
     tag_code: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
     risk_level: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)

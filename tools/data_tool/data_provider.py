@@ -40,7 +40,9 @@ class DataProvider(metaclass=SingleTon):
             # 新模式：使用统一的data_loader
             self.data_loader = data_loader
             # 为了兼容性，也设置db_tool属性
-            self.db_tool = data_loader if isinstance(data_loader, DBConnectTool) else None
+            self.db_tool = (
+                data_loader if isinstance(data_loader, DBConnectTool) else None
+            )
 
         self._global_ac: SensitiveAutomatonLoaderByDB | None = None
 
@@ -109,8 +111,8 @@ class DataProvider(metaclass=SingleTon):
                 async with app_id_lock:
                     if app_id and app_id not in self.custom_ac:
                         custom_container = CustomContainer()
-                        black_list, white_list = await self.data_loader.load_custom_words(
-                            app_id
+                        black_list, white_list = (
+                            await self.data_loader.load_custom_words(app_id)
                         )
                         if black_list:
                             ac = SensitiveAutomatonLoaderByDB()
@@ -121,7 +123,9 @@ class DataProvider(metaclass=SingleTon):
                                 [_.keyword for _ in white_list]
                             )
 
-                        custom_rule_list = await self.data_loader.load_custom_rule(app_id)
+                        custom_rule_list = await self.data_loader.load_custom_rule(
+                            app_id
+                        )
                         if custom_rule_list:
                             custom_container.custom_rule = custom_rule_list
 
@@ -167,7 +171,6 @@ async def load_global_words(ctx: DataProvider):
 async def load_global_rules(ctx: DataProvider):
     results: Dict[str, DecisionClassifyEnum] = await ctx.data_loader.load_global_rules()
     ctx.global_rules = results
-    
 
 
 async def load_custom_words(ctx: DataProvider):
@@ -175,7 +178,14 @@ async def load_custom_words(ctx: DataProvider):
     result_rules = await ctx.data_loader.load_all_custom_rules()
     df_words = pd.DataFrame(
         result_words,
-        columns=["scenario_id", "keyword", "tag_code", "category", "risk_level"],
+        columns=[
+            "scenario_id",
+            "keyword",
+            "exemptions",
+            "tag_code",
+            "category",
+            "risk_level",
+        ],
     )
 
     df_rules = pd.DataFrame(
@@ -207,14 +217,18 @@ async def load_custom_words(ctx: DataProvider):
             _df = group[group["category"] == 1]
             # Reconstruct ScenarioKeywords objects
             black_list = [
-                ScenarioKeywords(keyword=row.keyword, tag_code=row.tag_code)
+                ScenarioKeywords(
+                    keyword=row.keyword,
+                    tag_code=row.tag_code,
+                    exemptions=row.exemptions,
+                )
                 for row in _df.itertuples(index=False)
             ]
             white_list = group[group["category"] == 0]["keyword"].tolist()
 
             if black_list:
                 ac = SensitiveAutomatonLoaderByDB()
-                await run_in_async(ac.load_keywords, black_list)
+                await run_in_async(ac.load_keywords, black_list, False)
                 ctx.custom_ac[app_id].black_ac = ac
 
             if white_list:
@@ -225,7 +239,6 @@ async def load_custom_words(ctx: DataProvider):
             ctx.custom_ac[app_id].custom_rule = rules_dict
         ctx.custom_ac[app_id].loaded = True
     logger.info("customs sensitive words loaded success!")
-
 
 
 async def load_custom_words_else(ctx: DataProvider):

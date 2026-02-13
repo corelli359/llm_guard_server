@@ -81,7 +81,7 @@ class FileDataLoader:
         models = self._convert_to_model(data, ScenarioKeywords)
         # 返回元组列表，与数据库模式的 Row 格式一致
         return [
-            (m.scenario_id, m.keyword, m.tag_code, m.category, m.risk_level)
+            (m.scenario_id, m.keyword, m.exemptions, m.tag_code, m.category, m.risk_level)
             for m in models
             if m.is_active
         ]

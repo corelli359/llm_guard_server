@@ -23,10 +23,9 @@ class RuleDataLoaderDAO:
 
     async def get_all_global_keywords(self) -> Sequence[Row]:
         """全量加载：通用敏感词"""
-        stmt = select(
-            GlobalKeywords.keyword,
-            GlobalKeywords.tag_code
-            ).where(GlobalKeywords.is_active == True)
+        stmt = select(GlobalKeywords.keyword, GlobalKeywords.tag_code).where(
+            GlobalKeywords.is_active == True
+        )
         result = await self.session.execute(stmt)
         return result.all()
 
@@ -35,6 +34,7 @@ class RuleDataLoaderDAO:
         stmt = select(
             ScenarioKeywords.scenario_id,
             ScenarioKeywords.keyword,
+            ScenarioKeywords.exemptions,
             ScenarioKeywords.tag_code,
             ScenarioKeywords.category,
             ScenarioKeywords.risk_level,
@@ -76,14 +76,14 @@ class RuleDataLoaderDAO:
         )
         result = await self.session.execute(stmt)
         return result.all()
-    
+
     async def load_all_vip(self):
         stmt = select(
             RuleScenarioPolicy.scenario_id,
             RuleScenarioPolicy.match_value,
             RuleScenarioPolicy.extra_condition,
             RuleScenarioPolicy.strategy,
-            RuleScenarioPolicy.match_type
+            RuleScenarioPolicy.match_type,
         ).where(
             RuleScenarioPolicy.is_active == True,
             RuleScenarioPolicy.rule_mode == 0,

@@ -1,4 +1,4 @@
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Set
 from pydantic import BaseModel, Field, ConfigDict
 
 
@@ -13,6 +13,7 @@ class SensitivePromiseInput(BaseModel):
     use_customize_rule: bool = False
     use_vip_black: bool = False
     use_vip_white: bool = False
+    exemption_distance: int = 0
 
     # @field_validator('apikey')
     # @classmethod
@@ -30,6 +31,7 @@ class SensitiveData(BaseModel):
     global_result: Dict[str, List] = Field(default_factory=dict)
     final_result: Dict[str, List] = Field(default_factory=dict)
     original_input_prompt: str | None = None
+    exemption_set: Set[str] = Field(default_factory=set)
 
 
 class GuardData(BaseModel):
