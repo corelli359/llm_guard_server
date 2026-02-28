@@ -1,8 +1,8 @@
 __pycache__/
 .venv/
 TESTS/
-config/db_config.py
-config/apikey_settings.py
+src/config/db_config.py
+src/config/apikey_settings.py
 .DS_Store
 .vscode/
 /*.md
@@ -11,4 +11,4 @@ logs
 *.zip
 .env*
 *.md
-
+.env

@@ -6,7 +6,7 @@ from pathlib import Path
 from queue import Queue
 
 # Ensure logs directory exists
-LOG_DIR = Path("logs")
+LOG_DIR = Path("../logs")
 LOG_DIR.mkdir(exist_ok=True)
 
 # Define log file paths
