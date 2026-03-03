@@ -11,18 +11,18 @@ import time
 class RuleEngineInputHandler(HTTPMethodView):
     @validate(json=SensitiveContext)
     async def post(self, request: Request, body: SensitiveContext) -> HTTPResponse:
-        # if body.use_vip_white and body.use_vip_black:
-        #     raise Exception("VIP_WHITE_AND_WORDS_ALL_TRUE_ERROR")
         start = time.perf_counter_ns()
         tool = InputRuleEngineTool()
         tool.flow()
         await tool.execute(body)
-        logger.info(f"【final】 {(time.perf_counter_ns() - start)/1e6} ms")
-        
+        latency_ms = (time.perf_counter_ns() - start) / 1e6
+        logger.info(f"【rule_engine】 {latency_ms:.2f} ms")
+
+        # 将业务上下文挂到 request.ctx，审计中间件会自动采集
+        request.ctx.sensitive_context = body.model_dump(mode="json")
+
         return json(
             {
-                # "senstive": body.final_result,
-                # "guard": {"safety": body.safety, "category": body.category},
                 "final_decision": body.final_decision,
                 "all_decision_dict": body.all_decision_dict,
             },

@@ -16,6 +16,9 @@ class GuardHandler(HTTPMethodView):
         tool = GuardTool()
         tool.flow()
         await tool.execute(body)
-        logger.info(f"【1】 {(time.perf_counter_ns() - start)/1e6} ms")
-        
+        latency_ms = (time.perf_counter_ns() - start) / 1e6
+        logger.info(f"【guard】 {latency_ms:.2f} ms")
+
+        request.ctx.sensitive_context = body.model_dump(mode="json")
+
         return json({"Safety": body.safety, "Category": body.category}, 200)
