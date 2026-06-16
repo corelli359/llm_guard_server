@@ -3,8 +3,8 @@
 根据配置创建对应的数据加载器（FILE或DB）
 """
 from config.data_source_config import get_data_source_config
-from tools.data_tool.file_data_loader import FileDataLoader
 from tools.db_tools.db_tool import DBConnectTool
+from .file_data_loader import FileDataLoader
 
 
 class DataLoaderFactory:

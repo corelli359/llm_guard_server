@@ -1,26 +1,30 @@
 import threading
 import httpx
+import os
 from typing import Dict, Optional
 from langchain_openai import ChatOpenAI
-from config import MODEL_CONFIGS, Config
+from config import MODEL_CONFIGS
 from models import VllmType
-from .jwt_utils import generate_jwt
+from .jwt_download import generate_agent_token
+from sanic.log import logger
+
+APP_ID = os.getenv("X_APP_ID", "")
 
 
-class AuthHTTPClient(httpx.AsyncClient):
-    """自定义 HTTP 客户端，每次请求前动态添加认证 headers"""
+# def add_auth_headers(request: httpx.Request):
+#     request.headers['Authorization'] = generate_agent_token()
+#     request.headers['x-app-id'] = APP_ID
 
+
+class AuthHttpClient(httpx.AsyncClient):
     async def send(self, request, *args, **kwargs):
-        """重写 send 方法，在发送请求前添加认证 headers"""
         try:
-            # 每次请求前生成新的 JWT
-            token = generate_jwt()
-            request.headers["Authorization"] = f"Bearer {token}"
-            request.headers["x-app-id"] = Config.X_APP_ID
+            token = generate_agent_token()
+            request.headers['Authorization'] = token
+            # request.headers['Authorization'] = f"Bearer {token}"
+            request.headers['x-app-id'] = APP_ID
         except Exception as e:
-            print(f"[ERROR] Failed to generate JWT: {e}")
-            raise
-
+            logger.exception(f"authhttpclient exception:{e}, APP_ID:{APP_ID}")
         return await super().send(request, *args, **kwargs)
 
 
@@ -41,18 +45,17 @@ class LLMManager:
 
         limits = httpx.Limits(max_keepalive_connections=20, max_connections=150)
 
-        # 使用自定义的 AuthHTTPClient
-        self.shared_client = AuthHTTPClient(
+        self.shared_client = AuthHttpClient(
             limits=limits,
-            timeout=httpx.Timeout(60.0, connect=10.0),
-            follow_redirects=True,
+            timeout=httpx.Timeout(5.0, connect=5.0),
+            # event_hooks={"request": [add_auth_headers]}
         )
 
         # 模型实例缓存池
         self._model_instances: Dict[str, ChatOpenAI] = {}
 
         self._initialized = True
-        print("LLMManager 核心服务已初始化（支持动态 JWT 认证）")
+        print("LLMManager 核心服务已初始化")
 
     @classmethod
     def get_instance(cls):
@@ -61,25 +64,23 @@ class LLMManager:
         return cls._instance
 
     def get_model(self, model_type: VllmType) -> ChatOpenAI:
-
         if model_type not in self._model_instances:
             with self._lock:
                 if model_type not in self._model_instances:
                     config = MODEL_CONFIGS.get(model_type)
                     if not config:
+                        logger.error(f"MODEL_CONFIG_NOT_FOUND_ERROR: {model_type}")
                         raise ValueError(f"MODEL_CONFIG_NOT_FOUND_ERROR: {model_type}")
 
-                    print(f"初始化模型接入: {model_type.value} ...")
                     llm = ChatOpenAI(
                         model=config["model_name"],
                         temperature=config["temperature"],
                         api_key=config["api_key"],
                         base_url=config["base_url"],
                         max_retries=config.get("max_retries", 3),
-                        http_async_client=self.shared_client,  # 使用自定义客户端
+                        http_async_client=self.shared_client,
                     )
                     self._model_instances[model_type] = llm
-
         return self._model_instances[model_type]
 
     async def close(self):

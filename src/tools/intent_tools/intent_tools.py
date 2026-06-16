@@ -7,23 +7,13 @@ from models import VllmType, SafetyRewriteResult
 from langchain_core.prompts import ChatPromptTemplate
 
 from .intent_prompt_template import TC260_REWRITE_PROMPT
-from config import DEEP_SEEK_API_KEY
-
-API_KEY: str | None = DEEP_SEEK_API_KEY
-
-# api_key_path = "/Users/weipeng/Desktop/PY_WORK_SPACE/LangTaste/agent_dev_gemini/security/data/deepseek_apikey.txt"
-# with open(api_key_path, "r") as f:
-#     API_KEY = f.read().strip()
-
-if not API_KEY:
-    raise Exception("NO_APIKEY_ERROR")
 
 
 # ==========================================
 # 2. 意图识别与改写服务
 # ==========================================
 class IntentService:
-    def __init__(self, vllm_type: VllmType = VllmType.SAFE_MODEL):
+    def __init__(self, vllm_type: VllmType = VllmType.INTENT_MODEL):
         """
         初始化服务：
         1. 获取 LLM 实例（从单例管理器）
@@ -32,7 +22,7 @@ class IntentService:
         """
         # 从单例池获取 DeepSeek (响应速度快，适合意图识别)
         if not vllm_type:
-            self.vllm_type = VllmType.SAFE_MODEL
+            self.vllm_type = VllmType.INTENT_MODEL
         else:
             self.vllm_type = vllm_type
         self.llm = LLMManager.get_instance().get_model(self.vllm_type)

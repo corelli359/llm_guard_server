@@ -8,6 +8,7 @@ from ..intent_tools import IntentService
 from models import SafetyRewriteResult
 from ..string_filter_tools import remove_control_chars
 from ..data_tool.data_provider import DataProvider
+from sanic.log import logger
 
 
 async def custom_vip_load_by_db(ctx: SensitiveContext):
@@ -35,7 +36,7 @@ async def rewrite_chat(ctx: SensitiveContext):
     ]
     intent_instance: IntentService = IntentService()
     res: SafetyRewriteResult = await intent_instance.execute(
-        ctx.input_prompt, all_words
+        ctx.input_text, all_words
     )
     if not res.is_safe_now:
         res.rewrite_decision = 100
@@ -65,11 +66,11 @@ class InputRuleEngineTool:
     def flow(self):
         guard_tool = GuardTool()
         sensitive_tool = SensitiveTool()
-        guard_tool.flow()
-        sensitive_tool.flow()
+        guard_tool.flow()  # 大模型识别给出 safety category
+        sensitive_tool.flow()  # 敏感词精准匹配给出 final_result
         self.promise.then(
-            remove_control_chars,
-            custom_vip_load_by_db,
+            remove_control_chars,  # 简单字符过滤
+            custom_vip_load_by_db,  # 兜底加载超黑超白 to do :build ac有待改进 这里兜底了两次，是否删
         ).then(
             sensitive_tool.execute, guard_tool.execute
         ).then(make_decision).then(do_action_by_decision)

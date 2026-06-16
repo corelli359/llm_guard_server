@@ -19,6 +19,7 @@ def setup_audit_middleware(app: Sanic):
         if not request_id:
             request_id = str(uuid.uuid4())
         request.ctx.request_id = request_id
+        request.ctx.request_ip = request.headers.get("x-real-ip")
 
     @app.on_response
     async def on_response(request: Request, response: response.BaseHTTPResponse):

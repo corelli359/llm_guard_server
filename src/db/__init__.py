@@ -1,2 +1,2 @@
-from .dao import RuleDataLoaderDAO
+from .dao import RuleDataLoaderDAO, AuditLogDataLoaderDAO
 from .connect import DBConnector

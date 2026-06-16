@@ -1,8 +1,8 @@
 from contextlib import asynccontextmanager
 from typing import List, Dict
 from unittest import result
-from db import RuleDataLoaderDAO, DBConnector
-from models import RuleScenarioPolicy
+from db import RuleDataLoaderDAO, DBConnector, AuditLogDataLoaderDAO
+from models import RuleScenarioPolicy, ScenarioKeywords
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from models import DECISION_MAPPING, DecisionClassifyEnum
 
@@ -11,6 +11,7 @@ class DBConnectTool:
     def __init__(self, connector: DBConnector) -> None:
         self.dao: RuleDataLoaderDAO | None = None
         self.connector = connector
+        self.log_dao: AuditLogDataLoaderDAO | None = None
 
         self._session_factory = None
 
@@ -35,11 +36,27 @@ class DBConnectTool:
             except Exception as e:
                 raise e
 
+    @asynccontextmanager
+    async def get_audit_log_dao(self):
+        # 调用 self.session_factory (会自动触发上面的懒加载逻辑)
+        async with self.session_factory() as session:
+            dao = AuditLogDataLoaderDAO(session)
+            try:
+                yield dao
+            except Exception as e:
+                raise e
+
+    async def load_meta_tags(self):
+        async with self.get_dao() as dao:
+            results = await dao.get_all_tags()
+
+        return {item.tag_code: item.tag_name for item in results}
+
     async def load_global_rules(self):
         async with self.get_dao() as dao:
             results = await dao.get_all_global_defaults()
         return {
-            f"{item.tag_code}-{item.extra_condition}": DECISION_MAPPING[
+            f"{item.tag_code}-{item.extra_condition}".upper(): DECISION_MAPPING[
                 item.strategy.strip()
             ]
             for item in results
@@ -58,6 +75,18 @@ class DBConnectTool:
     async def load_custom_words(self, app_id: str):
         async with self.get_dao() as dao:
             result = await dao.get_scenario_keywords_by_appid(app_id)
+        black_list = []
+        white_list = []
+        for row in result:
+            if row.category == 1:
+                black_list.append(row)
+            else:
+                white_list.append(row)
+        return black_list, white_list
+
+    async def load_custom_words_only(self, app_id: str):
+        async with self.get_dao() as dao:
+            result = await dao.get_scenario_keywords_only_by_appid(app_id)
         black_list = []
         white_list = []
         for row in result:
@@ -119,4 +148,54 @@ class DBConnectTool:
                         ]
                     }
                 )
+
+        async with self.get_dao() as dao:
+            vip_keywords = await dao.load_vip_keywords_by_app_id(app_id)
+
+        for vk in vip_keywords:
+            if vk.category == ScenarioKeywords.CATEGORY_BLACK:
+                vip_black_words.append(vk)
+            if vk.category == ScenarioKeywords.CATEGORY_WHITE:
+                vip_white_words.append(vk)
+
         return vip_black_words, vip_black_rules, vip_white_words, vip_white_rules
+
+    async def load_all_scenario_ids(self):
+        async with self.get_dao() as dao:
+            scenario_ids = await dao.get_all_scenario_ids()
+        return scenario_ids
+
+    async def load_global_keywords_cnt(self):
+        async with self.get_dao() as dao:
+            count = await dao.get_global_keywords_cnt()
+        return count
+
+    async def load_global_keywords_by_limit(self, page_no: int, page_size: int = 200):
+        async with self.get_dao() as dao:
+            keyword_list = await dao.get_global_keywords_by_limit(
+                page_no=page_no,
+                page_size=page_size
+            )
+        return keyword_list
+
+    async def load_global_rules_cnt(self):
+        async with self.get_dao() as dao:
+            count = await dao.get_global_rules_cnt()
+        return count
+
+    async def load_global_rules_by_limit(self,page_no: int, page_size: int = 200):
+        async with self.get_dao() as dao:
+            results = await dao.get_global_rules_by_limit(
+                page_no=page_no,
+                page_size=page_size,
+            )
+        return {
+            f"{item.tag_code}-{item.extra_condition}".upper(): DECISION_MAPPING[
+                item.strategy.strip()
+            ]
+            for item in results
+        }
+
+    async def save_log_record(self, record):
+        async with self.get_audit_log_dao() as dao:
+            await dao.save_audit_log(record)

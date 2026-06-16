@@ -1,4 +1,3 @@
-
 from sanic import HTTPResponse, json
 from sanic.views import HTTPMethodView
 from tools.guard_tools import GuardTool
@@ -16,9 +15,6 @@ class GuardHandler(HTTPMethodView):
         tool = GuardTool()
         tool.flow()
         await tool.execute(body)
-        latency_ms = (time.perf_counter_ns() - start) / 1e6
-        logger.info(f"【guard】 {latency_ms:.2f} ms")
-
-        request.ctx.sensitive_context = body.model_dump(mode="json")
+        logger.info(f"【1】 {(time.perf_counter_ns() - start)/1e6} ms")
 
         return json({"Safety": body.safety, "Category": body.category}, 200)

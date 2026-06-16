@@ -75,6 +75,7 @@ class Base(DeclarativeBase):
 
 
 class GlobalKeywords(Base):
+    """通用全局敏感词表"""
     __tablename__ = "lib_global_keywords"
 
     # Mapped[str] 告诉 IDE 这是个字符串
@@ -105,6 +106,7 @@ class MetaTags(Base):
 
 
 class ScenarioKeywords(Base):
+    """自定义敏感词表"""
     __tablename__ = "lib_scenario_keywords"
 
     CATEGORY_WHITE = 0
@@ -115,6 +117,7 @@ class ScenarioKeywords(Base):
     keyword: Mapped[str] = mapped_column(String(255))
     exemptions: Mapped[Optional[list]] = mapped_column(JSON, nullable=True, comment="豁免词列表")
     tag_code: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    rule_mode: Mapped[int] = mapped_column(Integer, default=0) # 0普通 1超
     risk_level: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     category: Mapped[int] = mapped_column(
@@ -123,6 +126,7 @@ class ScenarioKeywords(Base):
 
 
 class RuleScenarioPolicy(Base):
+    """自定义规则表"""
     __tablename__ = "rule_scenario_policy"
 
     id: Mapped[str] = mapped_column(CHAR(36), primary_key=True)
@@ -137,6 +141,7 @@ class RuleScenarioPolicy(Base):
 
 
 class RuleGlobalDefaults(Base):
+    """通用全局规则表"""
     __tablename__ = "rule_global_defaults"
 
     id: Mapped[str] = mapped_column(CHAR(36), primary_key=True)
@@ -146,3 +151,23 @@ class RuleGlobalDefaults(Base):
 
     strategy: Mapped[str] = mapped_column(String(32))
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+
+
+class AuditLogDetail(Base):
+    """审计日志表"""
+    __tablename__ = "audit_log_detail"
+    id: Mapped[str] = mapped_column(CHAR(36), primary_key=True)
+    log_date: Mapped[str] = mapped_column(String(64))
+    scenario_id: Mapped[str] = mapped_column(String(64))
+    request_id: Mapped[str] = mapped_column(String(255))
+    input_text : Mapped[str] = mapped_column(String(1024))
+    keywords: Mapped[str] = mapped_column(String(1024))
+    safety: Mapped[str] = mapped_column(String(64)) # safe unsafe controversial
+    result: Mapped[str] = mapped_column(String(64)) # 拒答/放行
+    reason: Mapped[str] = mapped_column(String(255))
+    score:  Mapped[int] = mapped_column(Integer, default=0) # 100 50 0
+    priority: Mapped[int] = mapped_column(Integer, default=0) # 100 50 0
+    category : Mapped[str] = mapped_column(String(255))
+    updated_at: Mapped[str] = mapped_column(String(64))
+    created_at: Mapped[str] = mapped_column(String(64))
+    # ip_address: Mapped[str] = mapped_column(String(64)) # 不太好加

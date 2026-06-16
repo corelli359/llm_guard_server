@@ -1,6 +1,7 @@
 from typing import Any, List, Sequence
 from sqlalchemy.engine import Row
 from sqlalchemy.future import select
+from sqlalchemy import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 from models import (
     GlobalKeywords,
@@ -8,7 +9,10 @@ from models import (
     RuleScenarioPolicy,
     RuleGlobalDefaults,
     MetaTags,
+    AuditLogDetail
 )
+import uuid
+import datetime
 import asyncio
 from sqlalchemy import func
 
@@ -23,9 +27,10 @@ class RuleDataLoaderDAO:
 
     async def get_all_global_keywords(self) -> Sequence[Row]:
         """全量加载：通用敏感词"""
-        stmt = select(GlobalKeywords.keyword, GlobalKeywords.tag_code).where(
-            GlobalKeywords.is_active == True
-        )
+        stmt = select(
+            GlobalKeywords.keyword,
+            GlobalKeywords.tag_code
+        ).where(GlobalKeywords.is_active == True)
         result = await self.session.execute(stmt)
         return result.all()
 
@@ -38,18 +43,33 @@ class RuleDataLoaderDAO:
             ScenarioKeywords.tag_code,
             ScenarioKeywords.category,
             ScenarioKeywords.risk_level,
-        ).where(ScenarioKeywords.is_active == True)
+            ScenarioKeywords.rule_mode,
+        ).where(
+            ScenarioKeywords.is_active == True
+        )
         result = await self.session.execute(stmt)
         return result.all()
         # return list(result.scalars().all())
         # return list(result.scalars().all())
 
     async def get_scenario_keywords_by_appid(
-        self, app_id: str
+            self, app_id: str
     ) -> List[ScenarioKeywords]:
         """全量加载：场景自定义敏感词"""
         stmt = select(ScenarioKeywords).where(
             ScenarioKeywords.is_active == True, ScenarioKeywords.scenario_id == app_id
+        )
+        result = await self.session.execute(stmt)
+        return list(result.scalars().all())
+
+    async def get_scenario_keywords_only_by_appid(
+            self, app_id: str
+    ) -> List[ScenarioKeywords]:
+        """全量加载：场景自定义敏感词"""
+        stmt = select(ScenarioKeywords).where(
+            ScenarioKeywords.is_active == True,
+            ScenarioKeywords.scenario_id == app_id,
+            ScenarioKeywords.rule_mode == 0
         )
         result = await self.session.execute(stmt)
         return list(result.scalars().all())
@@ -77,13 +97,36 @@ class RuleDataLoaderDAO:
         result = await self.session.execute(stmt)
         return result.all()
 
+    async def load_all_vip_keywords(self):
+        stmt = select(
+            ScenarioKeywords.scenario_id,
+            ScenarioKeywords.keyword,
+            ScenarioKeywords.tag_code,
+            ScenarioKeywords.category,
+            ScenarioKeywords.risk_level,
+        ).where(
+            ScenarioKeywords.is_active == True,
+            ScenarioKeywords.rule_mode == 1,
+        )
+        result = await self.session.execute(stmt)
+        return result.all()
+
+    async def load_vip_keywords_by_app_id(self, app_id):
+        stmt = select(ScenarioKeywords).where(
+            ScenarioKeywords.is_active == True,
+            ScenarioKeywords.rule_mode == 1,
+            ScenarioKeywords.scenario_id == app_id,
+        )
+        result = await self.session.execute(stmt)
+        return list(result.scalars().all())
+
     async def load_all_vip(self):
         stmt = select(
             RuleScenarioPolicy.scenario_id,
             RuleScenarioPolicy.match_value,
             RuleScenarioPolicy.extra_condition,
             RuleScenarioPolicy.strategy,
-            RuleScenarioPolicy.match_type,
+            RuleScenarioPolicy.match_type
         ).where(
             RuleScenarioPolicy.is_active == True,
             RuleScenarioPolicy.rule_mode == 0,
@@ -148,3 +191,74 @@ class RuleDataLoaderDAO:
             "scenario_policies": results[2],
             "global_defaults": results[3],
         }
+
+    async def get_all_scenario_ids(self) -> List[str]:
+        """全量加载：场景列表"""
+        stmt = select(ScenarioKeywords.scenario_id).where(ScenarioKeywords.is_active == True).distinct()
+        result = await self.session.execute(stmt)
+        return list(result.scalars().all())
+
+    async def get_global_keywords_cnt(self):
+        stmt = (
+            select(func.count()).select_from(GlobalKeywords).where(GlobalKeywords.is_active == True)
+        )
+        result = await self.session.execute(stmt)
+        return result.scalar()
+
+    async def get_global_keywords_by_limit(self, page_no: int = 1, page_size: int = 200):
+        offset = (page_no - 1) * page_size
+        stmt = select(
+            GlobalKeywords.keyword,
+            GlobalKeywords.tag_code
+        ).where(
+            GlobalKeywords.is_active == True
+        ).order_by(GlobalKeywords.id).offset(offset).limit(page_size)
+        result = await self.session.execute(stmt)
+        return list(result.all())
+
+    async def get_global_rules_cnt(self):
+        """全量加载：通用兜底规则"""
+        stmt = (
+            select(func.count()).select_from(RuleGlobalDefaults).where(RuleGlobalDefaults.is_active == True)
+        )
+        result = await self.session.execute(stmt)
+        return result.scalar()
+
+    async def get_global_rules_by_limit(self, page_no: int = 1, page_size: int = 200):
+        offset = (page_no - 1) * page_size
+        stmt = select(
+            RuleGlobalDefaults.tag_code,
+            RuleGlobalDefaults.extra_condition,
+            RuleGlobalDefaults.strategy
+        ).where(
+            RuleGlobalDefaults.is_active == True
+        ).order_by(RuleGlobalDefaults.id).offset(offset).limit(page_size)
+        result = await self.session.execute(stmt)
+        return list(result.all())
+
+
+class AuditLogDataLoaderDAO:
+    """
+    数据访问对象：专门负责从数据库拉取规则引擎所需的配置数据
+    """
+
+    def __init__(self, session: AsyncSession):
+        self.session = session
+
+    async def save_audit_log(self, record):
+        """全量加载：通用敏感词"""
+        try:
+            now_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            auto_fields = {
+                "id": str(uuid.uuid4()),
+                "log_date": datetime.datetime.now().strftime("%Y-%m-%d"),
+                "created_at": now_str,
+                "updated_at": now_str
+            }
+            full_record = {**auto_fields, **record}
+            stmt = insert(AuditLogDetail).values(**full_record)
+            await self.session.execute(stmt)
+            await self.session.commit()
+        except Exception as e:
+            await self.session.rollback()
+            raise e

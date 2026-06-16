@@ -1,13 +1,9 @@
-import os
 from enum import Enum, IntEnum
-
-#  TODO 模型版本
 
 
 class VllmType(str, Enum):
-
-    SAFE_MODEL = "deepseek_chat"  # 后面可以改成safeguard
-    SAFE_MODEL_OTHER = "other"
+    INTENT_MODEL = "deepseek_chat"  # 后面可以改成safeguard
+    SAFE_MODEL = "guard-small"
 
 
 class DecisionClassifyEnum(IntEnum):

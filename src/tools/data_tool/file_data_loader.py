@@ -14,6 +14,7 @@ from models.db_meta import (
     RuleGlobalDefaults,
 )
 from models import DECISION_MAPPING, DecisionClassifyEnum
+import asyncio
 
 
 class FileDataLoader:
@@ -81,7 +82,7 @@ class FileDataLoader:
         models = self._convert_to_model(data, ScenarioKeywords)
         # 返回元组列表，与数据库模式的 Row 格式一致
         return [
-            (m.scenario_id, m.keyword, m.exemptions, m.tag_code, m.category, m.risk_level)
+            (m.scenario_id, m.keyword, m.tag_code, m.category, m.risk_level)
             for m in models
             if m.is_active
         ]
@@ -160,7 +161,7 @@ class FileDataLoader:
         """加载全局规则（与DBConnectTool接口一致）"""
         results = await self.get_all_global_defaults()
         return {
-            f"{item.tag_code}-{item.extra_condition}": DECISION_MAPPING[
+            f"{item.tag_code}-{item.extra_condition}".upper(): DECISION_MAPPING[
                 item.strategy.strip()
             ]
             for item in results
@@ -168,7 +169,8 @@ class FileDataLoader:
 
     async def load_global_words(self) -> List[GlobalKeywords]:
         """加载全局敏感词（与DBConnectTool接口一致）"""
-        return await self.get_all_global_keywords()
+        results = await self.get_all_global_keywords()
+        return results
 
     async def load_all_custom_words(self) -> List[ScenarioKeywords]:
         """加载所有自定义敏感词（与DBConnectTool接口一致）"""
@@ -259,7 +261,6 @@ class FileDataLoader:
         Returns:
             包含所有数据的字典
         """
-        import asyncio
 
         # 并发加载所有数据
         results = await asyncio.gather(

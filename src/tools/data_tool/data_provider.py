@@ -1,5 +1,5 @@
 from collections import defaultdict
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List, Union, AsyncGenerator
 from utils import SingleTon, run_in_async
 from tools.db_tools import DBConnectTool
 from .ac_tool import SensitiveAutomatonLoaderByDB
@@ -25,25 +25,10 @@ async def get_lock_by_app_id(app_id: str) -> asyncio.Lock:
 
 
 class DataProvider(metaclass=SingleTon):
-    def __init__(self, data_loader: Union[DBConnectTool, Any] = None) -> None:
-        """初始化数据提供者
+    def __init__(self, db_tool: Union[DBConnectTool, Any]) -> None:
+        self.db_tool = db_tool
 
-        Args:
-            data_loader: 数据加载器，可以是DBConnectTool或FileDataLoader
-                        如果为None，会根据配置自动创建
-        """
-        # 兼容旧代码：如果传入的是DBConnectTool，保存为db_tool
-        if isinstance(data_loader, DBConnectTool):
-            self.db_tool = data_loader
-            self.data_loader = data_loader
-        else:
-            # 新模式：使用统一的data_loader
-            self.data_loader = data_loader
-            # 为了兼容性，也设置db_tool属性
-            self.db_tool = (
-                data_loader if isinstance(data_loader, DBConnectTool) else None
-            )
-
+        # self.db_tool = db_tool
         self._global_ac: SensitiveAutomatonLoaderByDB | None = None
 
         self._custom_ac: Dict[str, CustomContainer] = {}
@@ -52,6 +37,9 @@ class DataProvider(metaclass=SingleTon):
 
         self._app_super_rules: Dict[str, Dict[str, str]] = defaultdict(dict)
         self._global_rules: Dict[str, DecisionClassifyEnum] = {}
+        self._meta_tags_dict: Dict[str, str] = {}
+        self._dimension_locks: Dict[str, Dict[str, asyncio.Lock]] = {}  # {app_id:{dimension:Lock}}
+        # self._rw_locks: Dict[str, Dict[str, RWLock]] = {}
 
     @property
     def global_rules(self):
@@ -60,6 +48,14 @@ class DataProvider(metaclass=SingleTon):
     @global_rules.setter
     def global_rules(self, rules):
         self._global_rules = rules
+
+    @property
+    def meta_tags_dict(self):
+        return self._meta_tags_dict
+
+    @meta_tags_dict.setter
+    def meta_tags_dict(self, _dic):
+        self._meta_tags_dict = _dic
 
     @property
     def custom_vip(self):
@@ -92,27 +88,43 @@ class DataProvider(metaclass=SingleTon):
         if not self.global_rules:
             try:
                 results: Dict[str, DecisionClassifyEnum] = (
-                    await self.data_loader.load_global_rules()
+                    await self.db_tool.load_global_rules()
                 )
                 self.global_rules = results
 
             except Exception as e:
                 logger.error(f"{str(e)}")
 
-    async def build_ac(self, ac_type: str, app_id: str = ""):
+    async def get_dimension_lock(self, app_id: str, dimension: str) -> asyncio.Lock:
+        if app_id not in self._dimension_locks:
+            self._dimension_locks[app_id] = {}
+        dim_locks = self._dimension_locks[app_id]
+        if dimension not in dim_locks:
+            dim_locks[dimension] = asyncio.Lock()
+        return dim_locks[dimension]
+
+    # async def get_rw_locks(self, app_id: str, dimension: str) -> RWLock:
+    #     if app_id not in self._rw_locks:
+    #         self._rw_locks[app_id] = {}
+    #     dim_locks = self._rw_locks[app_id]
+    #     if dimension not in dim_locks:
+    #         dim_locks[dimension] = RWLock()
+    #     return dim_locks[dimension]
+
+    async def build_ac(self, ac_type: str, app_id: str = "", auto_update=False):
 
         match ac_type:
             case "global":
-                data = await self.data_loader.load_global_words()
+                data = await self.db_tool.load_global_words()
                 self.global_ac = SensitiveAutomatonLoaderByDB()
                 await run_in_async(self.global_ac.load_keywords, data)
             case "customize":
                 app_id_lock: asyncio.Lock = await get_lock_by_app_id(app_id)
                 async with app_id_lock:
-                    if app_id and app_id not in self.custom_ac:
+                    if (app_id and app_id not in self.custom_ac) or auto_update:
                         custom_container = CustomContainer()
-                        black_list, white_list = (
-                            await self.data_loader.load_custom_words(app_id)
+                        black_list, white_list = await self.db_tool.load_custom_words(
+                            app_id
                         )
                         if black_list:
                             ac = SensitiveAutomatonLoaderByDB()
@@ -123,25 +135,24 @@ class DataProvider(metaclass=SingleTon):
                                 [_.keyword for _ in white_list]
                             )
 
-                        custom_rule_list = await self.data_loader.load_custom_rule(
-                            app_id
-                        )
+                        custom_rule_list = await self.db_tool.load_custom_rule(app_id)
                         if custom_rule_list:
                             custom_container.custom_rule = custom_rule_list
 
                         custom_container.loaded = True
                         self.custom_ac[app_id] = custom_container
+                        print(f"custom_ac:{self.custom_ac}")
 
             case "vip":
                 app_id_lock: asyncio.Lock = await get_lock_by_app_id(app_id)
                 async with app_id_lock:
-                    if app_id and app_id not in self.custom_vip:
+                    if (app_id and app_id not in self.custom_vip) or auto_update:
                         (
                             vip_black_words,
                             vip_black_rules,
                             vip_white_words,
                             vip_white_rules,
-                        ) = await self.data_loader.load_vip_scenario_by_app_id(app_id)
+                        ) = await self.db_tool.load_vip_scenario_by_app_id(app_id)
                         vip_container = CustomVipContainer()
                         if vip_black_words:
                             ac = SensitiveAutomatonLoaderByDB()
@@ -153,29 +164,85 @@ class DataProvider(metaclass=SingleTon):
                             vip_container.white_rule = vip_white_rules
                         if vip_white_words:
                             ac = SensitiveAutomatonLoaderByDB()
-                            await run_in_async(ac.load_keywords, vip_black_words)
+                            await run_in_async(ac.load_keywords, vip_white_words)
                             vip_container.white_ac = ac
                         vip_container.loaded = True
                         self.custom_vip[app_id] = vip_container
+                        print(f"{self.custom_vip}")
             case _:
                 raise Exception("NO_MATCHED_AC_TYPE_ERROR")
 
+    async def update_customize(self, app_id: str = ""):
+        ac_lock = await self.get_dimension_lock(app_id, "customize")
+        async with ac_lock:
+            custom_container = CustomContainer()
+            black_list, white_list = await self.db_tool.load_custom_words_only(
+                app_id
+            )
+            if black_list:
+                ac = SensitiveAutomatonLoaderByDB()
+                await run_in_async(ac.load_keywords, black_list, is_global=False)
+                custom_container.black_ac = ac
+            if white_list:
+                custom_container.white_ac = set(
+                    [_.keyword for _ in white_list]
+                )
+
+            custom_rule_list = await self.db_tool.load_custom_rule(app_id)
+            if custom_rule_list:
+                custom_container.custom_rule = custom_rule_list
+
+            custom_container.loaded = True
+            self.custom_ac[app_id] = custom_container
+
+    async def update_vip(self, app_id: str = ""):
+        ac_lock = await self.get_dimension_lock(app_id, "customize")
+        async with ac_lock:
+            (
+                vip_black_words,
+                vip_black_rules,
+                vip_white_words,
+                vip_white_rules,
+            ) = await self.db_tool.load_vip_scenario_by_app_id(app_id)
+            vip_container = CustomVipContainer()
+            if vip_black_words:
+                ac = SensitiveAutomatonLoaderByDB()
+                await run_in_async(ac.load_keywords, vip_black_words)
+                vip_container.black_ac = ac
+            if vip_black_rules:
+                vip_container.black_rule = vip_black_rules
+            if vip_white_rules:
+                vip_container.white_rule = vip_white_rules
+            if vip_white_words:
+                ac = SensitiveAutomatonLoaderByDB()
+                await run_in_async(ac.load_keywords, vip_white_words)
+                vip_container.white_ac = ac
+            vip_container.loaded = True
+            self.custom_vip[app_id] = vip_container
+
+    async def save_log_record(self, record):
+        await self.db_tool.save_log_record(record)
+
 
 async def load_global_words(ctx: DataProvider):
-    data = await ctx.data_loader.load_global_words()
+    data = await ctx.db_tool.load_global_words()
     ctx.global_ac = SensitiveAutomatonLoaderByDB()
     await run_in_async(ctx.global_ac.load_keywords, data)
-    logger.info("global sensitive words loaded success!")
+
+
+async def load_meta_tags(ctx: DataProvider):
+    results: Dict[str, str] = await ctx.db_tool.load_meta_tags()
+    ctx.meta_tags_dict = results
 
 
 async def load_global_rules(ctx: DataProvider):
-    results: Dict[str, DecisionClassifyEnum] = await ctx.data_loader.load_global_rules()
+    results: Dict[str, DecisionClassifyEnum] = await ctx.db_tool.load_global_rules()
     ctx.global_rules = results
 
 
 async def load_custom_words(ctx: DataProvider):
-    result_words = await ctx.data_loader.load_all_custom_words()
-    result_rules = await ctx.data_loader.load_all_custom_rules()
+    result_words = await ctx.db_tool.load_all_custom_words()
+    result_rules = await ctx.db_tool.load_all_custom_rules()
     df_words = pd.DataFrame(
         result_words,
         columns=[
@@ -185,6 +252,7 @@ async def load_custom_words(ctx: DataProvider):
             "tag_code",
             "category",
             "risk_level",
+            "rule_mode"
         ],
     )
 
@@ -212,38 +280,74 @@ async def load_custom_words(ctx: DataProvider):
         if app_id not in ctx.custom_ac:
             custom = CustomContainer()
             ctx.custom_ac[app_id] = custom
+        if app_id not in ctx.custom_vip:
+            custom_vip = CustomVipContainer()
+            ctx.custom_vip[app_id] = custom_vip
         if app_id in words_grouped.groups:
             group = words_grouped.get_group(app_id)
-            _df = group[group["category"] == 1]
+            # _df = group[group["category"] == 1]
             # Reconstruct ScenarioKeywords objects
-            black_list = [
-                ScenarioKeywords(
-                    keyword=row.keyword,
-                    tag_code=row.tag_code,
-                    exemptions=row.exemptions,
-                )
-                for row in _df.itertuples(index=False)
-            ]
-            white_list = group[group["category"] == 0]["keyword"].tolist()
+            black_list, vip_black_list, white_list, vip_white_list = [], [], [], []
+            for row in group.itertuples(index=False):
+                if row.rule_mode == 0:
+                    if row.category == 1:
+                        black_list.append(
+                            ScenarioKeywords(
+                                keyword=row.keyword,
+                                tag_code=row.tag_code,
+                                exemptions=row.exemptions,
+                            )
+                        )
+                    else:
+                        white_list.append(row.keyword)
+                else:
+                    if row.category == 1:
+                        vip_black_list.append(
+                            ScenarioKeywords(
+                                keyword=row.keyword,
+                                tag_code=row.tag_code,
+                                exemptions=row.exemptions,
+                            )
+                        )
+                    else:
+                        vip_white_list.append(
+                            ScenarioKeywords(
+                                keyword=row.keyword,
+                                tag_code=row.tag_code,
+                                exemptions=row.exemptions,
+                            )
+                        )
+            # white_list = group[group["category"] == 0]["keyword"].tolist()
 
             if black_list:
                 ac = SensitiveAutomatonLoaderByDB()
-                await run_in_async(ac.load_keywords, black_list, False)
+                await run_in_async(ac.load_keywords, black_list, is_global=False)
                 ctx.custom_ac[app_id].black_ac = ac
 
             if white_list:
                 ctx.custom_ac[app_id].white_ac = set(white_list)
+
+            if vip_black_list:
+                ac = SensitiveAutomatonLoaderByDB()
+                await run_in_async(ac.load_keywords, vip_black_list)
+                ctx.custom_vip[app_id].black_ac = ac
+
+            if vip_white_list:
+                ac = SensitiveAutomatonLoaderByDB()
+                await run_in_async(ac.load_keywords, vip_white_list)
+                ctx.custom_vip[app_id].white_ac = ac
+
         if app_id in rules_grouped.groups:
             group = rules_grouped.get_group(app_id)
             rules_dict = dict(zip(group["rule_key"], group["strategy"]))
             ctx.custom_ac[app_id].custom_rule = rules_dict
         ctx.custom_ac[app_id].loaded = True
+        ctx.custom_vip[app_id].loaded = True  # 后续增加规则的时候优化此逻辑
     logger.info("customs sensitive words loaded success!")
 
 
-async def load_custom_words_else(ctx: DataProvider):
-    vip_data = await ctx.data_loader.load_all_vip()
-
+async def load_custom_vip_rule(ctx: DataProvider):
+    vip_data = await ctx.db_tool.load_all_vip()
     vip_df = pd.DataFrame(
         vip_data,
         columns=[
@@ -262,7 +366,7 @@ async def load_custom_words_else(ctx: DataProvider):
 
     vip_tag_df = vip_df[vip_df["match_type"] == "TAG"]
     vip_tag_df["rule_key"] = (
-        vip_tag_df["match_value"].astype(str) + "-" + vip_tag_df["extra_condition"]
+            vip_tag_df["match_value"].astype(str) + "-" + vip_tag_df["extra_condition"]
     )
 
     all_app_ids = set(vip_df["scenario_id"].unique())
@@ -309,9 +413,81 @@ async def load_custom_words_else(ctx: DataProvider):
 class DataInitPromise(Promise):
 
     def flow(self):
-        self.then(load_global_rules, load_global_words).then(
-            load_custom_words, load_custom_words_else
+        self.then(
+            load_global_rules,
+            load_global_words
+        ).then(
+            load_custom_words,  # 加载自定义敏感词和规则
+            load_custom_vip_rule,  # 加载超黑超白规则
+
+        ).then(
+            load_meta_tags
         )
 
     async def run(self, ctx: DataProvider):
         await self.execute(ctx)
+
+    async def reload_global_data(self, g_data_provider):
+        async def global_keywords_generator(data_provider: DataProvider, page_size: int = 200) -> AsyncGenerator[
+            list, None]:
+            global_keywords_cnt = await data_provider.db_tool.load_global_keywords_cnt()
+            logger.info(f"global_keywords_cnt:{global_keywords_cnt}")
+            total_pages = (global_keywords_cnt + page_size - 1) // page_size
+            for page_no in range(1, total_pages + 1):
+                global_keywords = await data_provider.db_tool.load_global_keywords_by_limit(
+                    page_no=page_no,
+                    page_size=page_size,
+                )
+                yield global_keywords
+
+        async def global_rules_generator(data_provider: DataProvider, page_size: int = 200) -> AsyncGenerator[
+            list, None]:
+            global_rules_cnt = await data_provider.db_tool.load_global_rules_cnt()
+            total_pages = (global_rules_cnt + page_size - 1) // page_size
+            for page_no in range(1, total_pages + 1):
+                global_rules = await data_provider.db_tool.load_global_rules_by_limit(
+                    page_no=page_no,
+                    page_size=page_size,
+                )
+                yield global_rules
+
+        g_data_provider.global_ac = SensitiveAutomatonLoaderByDB()
+        all_global_keywords = []
+        async for global_keywords in global_keywords_generator(g_data_provider, page_size=200):
+            all_global_keywords += global_keywords
+        logger.info(f"已收集一批敏感词，当前累计:{len(all_global_keywords)}条")
+        await run_in_async(g_data_provider.global_ac.load_keywords, all_global_keywords)
+        logger.info("更新全局敏感词成功")
+
+        async for global_rules in global_rules_generator(g_data_provider, page_size=200):
+            g_data_provider.global_rules.update(global_rules)
+        logger.info("更新全局规则成功")
+        return g_data_provider
+
+    async def reload_all_data(self):
+        """to-do:原子性修改方案"""
+        async def scenario_ac_generator(data_provider: DataProvider, scenario_ids: list[str]) -> AsyncGenerator[
+            tuple[str, str], None]:
+            for scenario_id in scenario_ids:
+                # 按照场景批量更新,后续可能加分页
+                await data_provider.update_customize(app_id=scenario_id)
+                # await data_provider.build_ac("vip", scenario_id, auto_update=True)
+                yield "scenario", scenario_id
+
+        # 批量更新全局和自定义，并且分批次更新
+        data_provider: DataProvider = DataProvider.get_instance()
+        scenario_ids = await data_provider.db_tool.load_all_scenario_ids()
+        logger.info(f"场景开始更新自定义敏感词和桂萼:{scenario_ids}")
+        #  build_ac不可以增量加载后续改造
+        async for _, app_id in scenario_ac_generator(data_provider, scenario_ids):
+            logger.info(f"已完成[{app_id}]场景更新")
+        logger.info(f"场景自定义敏感词和规则更新全部成功，{data_provider.custom_ac}")
+
+        # logger.info(f"开始加载超黑超白敏感词和规则")
+        # await load_custom_vip_rule(data_provider),  # 加载超黑超白规则
+        # logger.info(f"超黑超白米娜干此和规则加载成功")
+        # 更新全局敏感词和全局规则 分页更新
+        await self.reload_global_data(data_provider)
+
+        await load_custom_vip_rule(data_provider)
+        logger.info("加载超黑超白规则成功")

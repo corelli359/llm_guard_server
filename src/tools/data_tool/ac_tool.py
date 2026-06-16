@@ -3,7 +3,6 @@ import threading
 import ahocorasick
 from models import GlobalKeywords, ScenarioKeywords, SensitiveContext
 from typing import Any, Union, List, Set
-from utils import Promise
 from dataclasses import dataclass
 from typing import Optional
 
@@ -14,11 +13,10 @@ class SensitiveAutomatonLoaderByDB:
         self.lock = threading.Lock()
 
     def load_keywords(
-        self,
-        word_list: List[Union[GlobalKeywords, ScenarioKeywords]],
-        is_global: bool = True,
+            self,
+            word_list: List[Union[GlobalKeywords, ScenarioKeywords]],
+            is_global: bool = True,
     ):
-
         A = ahocorasick.Automaton()
         if is_global:
             for idx, word in enumerate(word_list):
@@ -35,12 +33,11 @@ class SensitiveAutomatonLoaderByDB:
         A.make_automaton()
         self.automaton = A
 
-    def scan(
-        self, text, exemption_distance: int = 0, ctx: SensitiveContext | None = None
-    ) -> dict:
+    def scan( self, text, exemption_distance: int = 0, ctx: SensitiveContext | None = None) -> dict:
         if not self.automaton:
             raise Exception("NO_WORD_LIST_ERROR")
         contains = {}
+        # 1.先精准匹配
         for end_index, payload in self.automaton.iter(text):
             if len(payload) == 3:
                 word, tag_code, exemptions = payload
@@ -72,7 +69,6 @@ class SensitiveAutomatonLoaderByDB:
                     if ctx:
                         ctx.exemption_set.add(word)
                     continue
-
             if tag_code not in contains:
                 contains[tag_code] = []
             contains[tag_code].append(word)
